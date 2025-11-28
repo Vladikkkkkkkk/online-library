@@ -1,0 +1,143 @@
+.settings {
+  padding: 2rem 1.5rem;
+  min-height: calc(100vh - 200px);
+}
+
+.settings__container {
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.settings__back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--color-text-muted);
+  text-decoration: none;
+  font-size: 0.9rem;
+  margin-bottom: 1.5rem;
+  transition: color 0.2s;
+}
+
+.settings__back:hover {
+  color: var(--color-primary);
+}
+
+.settings__title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 1.5rem;
+}
+
+/* Tabs */
+.settings__tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  padding: 0.25rem;
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.settings__tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border: none;
+  background: transparent;
+  border-radius: var(--radius-md);
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.settings__tab:hover {
+  background: var(--color-surface-hover);
+  color: var(--color-text);
+}
+
+.settings__tab--active {
+  background: var(--color-primary);
+  color: white;
+}
+
+.settings__tab--active:hover {
+  background: var(--color-primary-dark);
+  color: white;
+}
+
+/* Panel */
+.settings__panel {
+  background: var(--color-surface);
+  padding: 2rem;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+}
+
+.settings__panel-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+/* Form */
+.settings__form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.settings__form-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+.settings__form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.settings__form-group label {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.settings__password-hints {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: var(--color-primary-light);
+  border-radius: var(--radius-md);
+  font-size: 0.85rem;
+  color: var(--color-primary);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .settings__form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .settings__tabs {
+    flex-direction: column;
+  }
+
+  .settings__panel {
+    padding: 1.5rem;
+  }
+}
+

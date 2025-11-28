@@ -1,0 +1,288 @@
+.book-reader {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: #2c2c2c;
+  color: #fff;
+  overflow: hidden;
+}
+
+.book-reader--fullscreen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9999;
+}
+
+/* Header */
+.book-reader__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  background: rgba(0, 0, 0, 0.8);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  z-index: 100;
+}
+
+.book-reader__header-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.book-reader__book-info {
+  min-width: 0;
+  flex: 1;
+}
+
+.book-reader__title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.book-reader__author {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin: 0.25rem 0 0 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.book-reader__header-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.book-reader__shortcuts-hint {
+  font-size: 1.2rem;
+  cursor: help;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.book-reader__shortcuts-hint:hover {
+  opacity: 1;
+}
+
+/* Content */
+.book-reader__content {
+  flex: 1;
+  overflow: auto;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 2rem;
+  background: #1a1a1a;
+}
+
+.book-reader__pdf-container {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100%;
+}
+
+.book-reader__page {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  background: white;
+  margin: 0 auto;
+}
+
+.book-reader__pdf-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  gap: 1rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.book-reader__error-message {
+  text-align: center;
+  padding: 3rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.book-reader__error-message p {
+  margin-bottom: 1rem;
+}
+
+/* Controls */
+.book-reader__controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  background: rgba(0, 0, 0, 0.8);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.book-reader__controls-left {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.book-reader__zoom {
+  min-width: 50px;
+  text-align: center;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.book-reader__controls-center {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex: 1;
+  justify-content: center;
+}
+
+.book-reader__page-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.book-reader__page-input {
+  width: 60px;
+  padding: 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  text-align: center;
+  font-size: 0.9rem;
+}
+
+.book-reader__page-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.book-reader__controls-right {
+  display: flex;
+  align-items: center;
+}
+
+.book-reader__progress {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* Loading & Error States */
+.book-reader__loading,
+.book-reader__error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 2rem;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.book-reader__error h2 {
+  margin-bottom: 1rem;
+}
+
+.book-reader__error p {
+  margin-bottom: 2rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* PDF.js overrides */
+.react-pdf__Page {
+  margin: 0 auto;
+}
+
+.react-pdf__Page__canvas {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+.react-pdf__Page__textContent {
+  display: none;
+}
+
+.react-pdf__Page__annotations {
+  display: none;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .book-reader__header {
+    padding: 0.75rem 1rem;
+    flex-wrap: wrap;
+  }
+
+  .book-reader__book-info {
+    order: 3;
+    width: 100%;
+    margin-top: 0.5rem;
+  }
+
+  .book-reader__content {
+    padding: 1rem;
+  }
+
+  .book-reader__controls {
+    padding: 0.75rem 1rem;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .book-reader__controls-left,
+  .book-reader__controls-center,
+  .book-reader__controls-right {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .book-reader__page-input {
+    width: 50px;
+  }
+}
+
+/* Fullscreen adjustments */
+.book-reader--fullscreen .book-reader__header,
+.book-reader--fullscreen .book-reader__controls {
+  position: fixed;
+  left: 0;
+  right: 0;
+  z-index: 10000;
+}
+
+.book-reader--fullscreen .book-reader__header {
+  top: 0;
+}
+
+.book-reader--fullscreen .book-reader__controls {
+  bottom: 0;
+}
+
+.book-reader--fullscreen .book-reader__content {
+  padding-top: 80px;
+  padding-bottom: 80px;
+}
+

@@ -1,0 +1,338 @@
+import { useState, useRef, useLayoutEffect, useMemo } from 'react';
+import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { ArrowLeft, Save } from 'lucide-react';
+import { adminApi } from '../../api/admin';
+import { booksApi } from '../../api/books';
+import { categoriesApi } from '../../api/categories';
+import { Button, Input, Loader } from '../../components/common';
+import toast from 'react-hot-toast';
+import './Admin.css';
+
+const BookForm = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const isEditing = !!id;
+  const initializedRef = useRef(false);
+
+  const { data: bookData, isLoading: bookLoading } = useQuery({
+    queryKey: ['book', id],
+    queryFn: () => booksApi.getBook(id),
+    enabled: isEditing,
+  });
+
+  const { data: categoriesData } = useQuery({
+    queryKey: ['categories'],
+    queryFn: () => categoriesApi.getCategories(),
+  });
+
+  const book = bookData?.data;
+  
+  // Compute initial categories from book data
+  const initialCategories = useMemo(() => {
+    return book?.categories?.map((c) => c.id) || [];
+  }, [book?.categories]);
+
+  const [selectedCategories, setSelectedCategories] = useState([]);
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+  } = useForm();
+
+  // Initialize form when book data loads
+  useLayoutEffect(() => {
+    if (book && !initializedRef.current) {
+      initializedRef.current = true;
+      reset({
+        title: book.title,
+        description: book.description,
+        isbn: book.isbn,
+        publishYear: book.publishYear,
+        publisher: book.publisher,
+        language: book.language,
+        pageCount: book.pageCount,
+        coverUrl: book.coverUrl,
+        fileUrl: book.fileUrl,
+        fileFormat: book.fileFormat,
+      });
+    }
+  }, [book, reset]);
+  
+  // Sync categories when initialCategories change (separate from form reset)
+  useLayoutEffect(() => {
+    if (initialCategories.length > 0 && selectedCategories.length === 0) {
+      // This is intentional - we need to sync form state from external data
+      setSelectedCategories(initialCategories);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialCategories]);
+
+  const createMutation = useMutation({
+    mutationFn: (data) => adminApi.createBook(data),
+    onSuccess: () => {
+      toast.success('Книгу створено');
+      navigate('/admin/books');
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Помилка створення книги');
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: (data) => adminApi.updateBook(id, data),
+    onSuccess: () => {
+      toast.success('Книгу оновлено');
+      navigate('/admin/books');
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Помилка оновлення книги');
+    },
+  });
+
+  const onSubmit = (data) => {
+    const bookData = {
+      ...data,
+      publishYear: data.publishYear ? parseInt(data.publishYear, 10) : null,
+      pageCount: data.pageCount ? parseInt(data.pageCount, 10) : null,
+      categoryIds: selectedCategories,
+    };
+
+    if (isEditing) {
+      updateMutation.mutate(bookData);
+    } else {
+      createMutation.mutate(bookData);
+    }
+  };
+
+  const handleCategoryToggle = (categoryId) => {
+    setSelectedCategories((prev) =>
+      prev.includes(categoryId)
+        ? prev.filter((id) => id !== categoryId)
+        : [...prev, categoryId]
+    );
+  };
+
+  const categories = categoriesData?.data || [];
+  const isSubmitting = createMutation.isPending || updateMutation.isPending;
+
+  if (isEditing && bookLoading) {
+    return (
+      <div className="admin-loading">
+        <Loader size="lg" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="admin-books" style={{ maxWidth: '800px' }}>
+      <Link to="/admin/books" className="settings__back">
+        <ArrowLeft size={18} />
+        Назад до списку книг
+      </Link>
+
+      <h1 className="admin-books__title" style={{ marginBottom: '2rem' }}>
+        {isEditing ? 'Редагування книги' : 'Нова книга'}
+      </h1>
+
+      <form onSubmit={handleSubmit(onSubmit)} className="settings__panel">
+        <div className="settings__form">
+          <div className="settings__form-group">
+            <label htmlFor="title">Назва книги *</label>
+            <Input
+              id="title"
+              placeholder="Введіть назву книги"
+              {...register('title', { required: "Назва обов'язкова" })}
+              error={errors.title?.message}
+            />
+          </div>
+
+          <div className="settings__form-group">
+            <label htmlFor="description">Опис</label>
+            <textarea
+              id="description"
+              placeholder="Введіть опис книги"
+              rows={4}
+              {...register('description')}
+              style={{
+                width: '100%',
+                padding: '0.75rem',
+                border: '1px solid var(--color-border)',
+                borderRadius: 'var(--radius-md)',
+                background: 'var(--color-surface)',
+                color: 'var(--color-text)',
+                fontSize: '1rem',
+                resize: 'vertical',
+              }}
+            />
+          </div>
+
+          <div className="settings__form-row">
+            <div className="settings__form-group">
+              <label htmlFor="isbn">ISBN</label>
+              <Input
+                id="isbn"
+                placeholder="978-3-16-148410-0"
+                {...register('isbn')}
+              />
+            </div>
+            <div className="settings__form-group">
+              <label htmlFor="publishYear">Рік видання</label>
+              <Input
+                id="publishYear"
+                type="number"
+                placeholder="2024"
+                {...register('publishYear', {
+                  min: { value: 1000, message: 'Невірний рік' },
+                  max: { value: new Date().getFullYear(), message: 'Рік не може бути в майбутньому' },
+                })}
+                error={errors.publishYear?.message}
+              />
+            </div>
+          </div>
+
+          <div className="settings__form-row">
+            <div className="settings__form-group">
+              <label htmlFor="language">Мова</label>
+              <select
+                id="language"
+                {...register('language')}
+                style={{
+                  width: '100%',
+                  padding: '0.75rem',
+                  border: '1px solid var(--color-border)',
+                  borderRadius: 'var(--radius-md)',
+                  background: 'var(--color-surface)',
+                  color: 'var(--color-text)',
+                  fontSize: '1rem',
+                }}
+              >
+                <option value="uk">Українська</option>
+                <option value="en">English</option>
+                <option value="de">Deutsch</option>
+                <option value="fr">Français</option>
+                <option value="es">Español</option>
+              </select>
+            </div>
+            <div className="settings__form-group">
+              <label htmlFor="pageCount">Кількість сторінок</label>
+              <Input
+                id="pageCount"
+                type="number"
+                placeholder="256"
+                {...register('pageCount', {
+                  min: { value: 1, message: 'Мінімум 1 сторінка' },
+                })}
+                error={errors.pageCount?.message}
+              />
+            </div>
+          </div>
+
+          <div className="settings__form-group">
+            <label htmlFor="publisher">Видавництво</label>
+            <Input
+              id="publisher"
+              placeholder="Назва видавництва"
+              {...register('publisher')}
+            />
+          </div>
+
+          <div className="settings__form-group">
+            <label htmlFor="coverUrl">URL обкладинки</label>
+            <Input
+              id="coverUrl"
+              placeholder="https://example.com/cover.jpg"
+              {...register('coverUrl')}
+            />
+          </div>
+
+          <div className="settings__form-row">
+            <div className="settings__form-group">
+              <label htmlFor="fileUrl">URL файлу книги</label>
+              <Input
+                id="fileUrl"
+                placeholder="https://example.com/book.pdf"
+                {...register('fileUrl')}
+              />
+            </div>
+            <div className="settings__form-group">
+              <label htmlFor="fileFormat">Формат файлу</label>
+              <select
+                id="fileFormat"
+                {...register('fileFormat')}
+                style={{
+                  width: '100%',
+                  padding: '0.75rem',
+                  border: '1px solid var(--color-border)',
+                  borderRadius: 'var(--radius-md)',
+                  background: 'var(--color-surface)',
+                  color: 'var(--color-text)',
+                  fontSize: '1rem',
+                }}
+              >
+                <option value="">Виберіть формат</option>
+                <option value="PDF">PDF</option>
+                <option value="EPUB">EPUB</option>
+                <option value="MOBI">MOBI</option>
+                <option value="FB2">FB2</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Categories */}
+          <div className="settings__form-group">
+            <label>Категорії</label>
+            <div
+              style={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: '0.5rem',
+                marginTop: '0.5rem',
+              }}
+            >
+              {categories.map((category) => (
+                <label
+                  key={category.id}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    padding: '0.5rem 1rem',
+                    background: selectedCategories.includes(category.id)
+                      ? 'var(--color-primary)'
+                      : 'var(--color-surface-hover)',
+                    color: selectedCategories.includes(category.id)
+                      ? 'white'
+                      : 'var(--color-text)',
+                    borderRadius: 'var(--radius-md)',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={selectedCategories.includes(category.id)}
+                    onChange={() => handleCategoryToggle(category.id)}
+                    style={{ display: 'none' }}
+                  />
+                  {category.nameUk || category.name}
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <Button type="submit" loading={isSubmitting}>
+            <Save size={18} />
+            {isEditing ? 'Зберегти зміни' : 'Створити книгу'}
+          </Button>
+        </div>
+      </form>
+    </div>
+  );
+};
+
+export default BookForm;
+
