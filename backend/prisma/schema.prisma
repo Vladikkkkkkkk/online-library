@@ -17,13 +17,6 @@ enum Role {
   ADMIN
 }
 
-// Enum for book status
-enum BookStatus {
-  AVAILABLE
-  BORROWED
-  UNAVAILABLE
-}
-
 // User model
 model User {
   id           String   @id @default(uuid())
@@ -32,18 +25,20 @@ model User {
   firstName    String   @map("first_name")
   lastName     String   @map("last_name")
   role         Role     @default(USER)
+  isBlocked    Boolean  @default(false) @map("is_blocked")
   avatar       String?
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 
   // Relations
   savedBooks   SavedBook[]
-  downloads    Download[]
+  playlists    Playlist[]
+  reviews      Review[]
   
   @@map("users")
 }
 
-// Category model for books
+// Category model - kept for filtering/search purposes
 model Category {
   id          String   @id @default(uuid())
   name        String   @unique
@@ -53,114 +48,74 @@ model Category {
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
-  // Relations
-  books       BookCategory[]
-
   @@map("categories")
 }
 
-// Author model
-model Author {
-  id          String   @id @default(uuid())
-  name        String
-  biography   String?
-  birthYear   Int?     @map("birth_year")
-  deathYear   Int?     @map("death_year")
-  photoUrl    String?  @map("photo_url")
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
-
-  // Relations
-  books       BookAuthor[]
-
-  @@map("authors")
-}
-
-// Book model
-model Book {
-  id              String     @id @default(uuid())
-  title           String
-  description     String?
-  isbn            String?    @unique
-  publishYear     Int?       @map("publish_year")
-  publisher       String?
-  language        String     @default("uk")
-  pageCount       Int?       @map("page_count")
-  coverUrl        String?    @map("cover_url")
-  fileUrl         String?    @map("file_url")
-  fileFormat      String?    @map("file_format") // PDF, EPUB, etc.
-  status          BookStatus @default(AVAILABLE)
-  openLibraryId   String?    @unique @map("open_library_id") // ID from Open Library API
-  rating          Float      @default(0)
-  ratingCount     Int        @default(0) @map("rating_count")
-  downloadCount   Int        @default(0) @map("download_count")
-  createdAt       DateTime   @default(now()) @map("created_at")
-  updatedAt       DateTime   @updatedAt @map("updated_at")
-
-  // Relations
-  authors         BookAuthor[]
-  categories      BookCategory[]
-  savedBy         SavedBook[]
-  downloads       Download[]
-
-  @@index([title])
-  @@index([publishYear])
-  @@map("books")
-}
-
-// Many-to-many relation between Book and Author
-model BookAuthor {
-  id       String @id @default(uuid())
-  bookId   String @map("book_id")
-  authorId String @map("author_id")
-
-  book     Book   @relation(fields: [bookId], references: [id], onDelete: Cascade)
-  author   Author @relation(fields: [authorId], references: [id], onDelete: Cascade)
-
-  @@unique([bookId, authorId])
-  @@map("book_authors")
-}
-
-// Many-to-many relation between Book and Category
-model BookCategory {
-  id         String @id @default(uuid())
-  bookId     String @map("book_id")
-  categoryId String @map("category_id")
-
-  book       Book     @relation(fields: [bookId], references: [id], onDelete: Cascade)
-  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-
-  @@unique([bookId, categoryId])
-  @@map("book_categories")
-}
-
-// Saved books (user's personal library)
+// Saved books (user's personal library) - only Open Library books
 model SavedBook {
   id            String   @id @default(uuid())
   userId        String   @map("user_id")
-  bookId        String?  @map("book_id") // Nullable for Open Library books
-  openLibraryId String?  @map("open_library_id") // For Open Library books
-  source        String   @default("local") // "local" or "openlibrary"
+  openLibraryId String   @map("open_library_id") // Open Library ID
   savedAt       DateTime @default(now()) @map("saved_at")
 
   user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  book          Book?    @relation(fields: [bookId], references: [id], onDelete: Cascade)
 
-  @@unique([userId, bookId, source], name: "unique_local_book")
-  @@unique([userId, openLibraryId, source], name: "unique_openlibrary_book")
-  @@index([userId, source])
+  @@unique([userId, openLibraryId], name: "saved_books_user_id_open_library_id_key")
+  @@index([userId])
   @@map("saved_books")
 }
 
-// Download history
-model Download {
-  id           String   @id @default(uuid())
-  userId       String   @map("user_id")
-  bookId       String   @map("book_id")
-  downloadedAt DateTime @default(now()) @map("downloaded_at")
+// Playlist model - user-created playlists
+model Playlist {
+  id          String   @id @default(uuid())
+  userId      String   @map("user_id")
+  name        String
+  description String?
+  isPublic    Boolean  @default(false) @map("is_public")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
 
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  book         Book     @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  books       PlaylistBook[]
 
-  @@map("downloads")
+  @@index([userId])
+  @@map("playlists")
 }
+
+// PlaylistBook - books in playlists
+model PlaylistBook {
+  id            String   @id @default(uuid())
+  playlistId    String   @map("playlist_id")
+  openLibraryId String   @map("open_library_id") // Open Library ID
+  order         Int      @default(0) // Order in playlist
+  addedAt       DateTime @default(now()) @map("added_at")
+
+  playlist      Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+
+  @@unique([playlistId, openLibraryId], name: "playlist_books_playlist_id_open_library_id_key")
+  @@index([playlistId])
+  @@map("playlist_books")
+}
+
+// Review model - user reviews and ratings for books
+model Review {
+  id            String   @id @default(uuid())
+  userId        String   @map("user_id")
+  openLibraryId String   @map("open_library_id") // Open Library ID
+  rating        Int      // Rating 1-5
+  title         String?
+  comment       String?
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, openLibraryId], name: "reviews_user_id_open_library_id_key") // One review per user per book
+  @@index([openLibraryId])
+  @@map("reviews")
+}
+
+
+
+
+

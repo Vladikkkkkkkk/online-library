@@ -1,0 +1,133 @@
+.playlist-detail {
+  padding: 2rem 0;
+}
+
+.playlist-detail__container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+.playlist-detail__back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  margin-bottom: 2rem;
+  transition: color 0.2s;
+}
+
+.playlist-detail__back:hover {
+  color: var(--color-primary);
+}
+
+.playlist-detail__header {
+  display: flex;
+  gap: 2rem;
+  margin-bottom: 3rem;
+  padding-bottom: 2rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.playlist-detail__icon {
+  width: 120px;
+  height: 120px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  flex-shrink: 0;
+}
+
+.playlist-detail__info {
+  flex: 1;
+}
+
+.playlist-detail__name {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem;
+  color: var(--color-text);
+}
+
+.playlist-detail__description {
+  font-size: 1.1rem;
+  color: var(--color-text-secondary);
+  margin: 0 0 1rem;
+}
+
+.playlist-detail__meta {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  color: var(--color-text-secondary);
+}
+
+.playlist-detail__badge {
+  padding: 0.25rem 0.75rem;
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.playlist-detail__author {
+  font-style: italic;
+}
+
+.playlist-detail__actions {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.playlist-detail__loading,
+.playlist-detail__not-found {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  text-align: center;
+}
+
+.playlist-detail__empty {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: var(--color-text-secondary);
+}
+
+.playlist-detail__empty h2 {
+  margin: 1rem 0 0.5rem;
+  color: var(--color-text);
+}
+
+.playlist-detail__books {
+  margin-top: 2rem;
+}
+
+@media (max-width: 768px) {
+  .playlist-detail__header {
+    flex-direction: column;
+  }
+
+  .playlist-detail__icon {
+    width: 80px;
+    height: 80px;
+  }
+
+  .playlist-detail__name {
+    font-size: 2rem;
+  }
+
+  .playlist-detail__actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
+

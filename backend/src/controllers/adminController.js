@@ -38,12 +38,12 @@ const getUsers = asyncHandler(async (req, res) => {
         firstName: true,
         lastName: true,
         role: true,
+        isBlocked: true,
         avatar: true,
         createdAt: true,
         _count: {
           select: {
             savedBooks: true,
-            downloads: true,
           },
         },
       },
@@ -68,22 +68,22 @@ const getUserById = asyncHandler(async (req, res) => {
 
   const user = await prisma.user.findUnique({
     where: { id },
-    select: {
-      id: true,
-      email: true,
-      firstName: true,
-      lastName: true,
-      role: true,
-      avatar: true,
-      createdAt: true,
-      updatedAt: true,
-      _count: {
-        select: {
-          savedBooks: true,
-          downloads: true,
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        role: true,
+        isBlocked: true,
+        avatar: true,
+        createdAt: true,
+        updatedAt: true,
+        _count: {
+          select: {
+            savedBooks: true,
+          },
         },
       },
-    },
   });
 
   if (!user) {
@@ -142,12 +142,13 @@ const updateUserRole = asyncHandler(async (req, res) => {
 });
 
 /**
- * @desc    Delete user (admin)
- * @route   DELETE /api/admin/users/:id
+ * @desc    Block/Unblock user (admin)
+ * @route   PUT /api/admin/users/:id/block
  * @access  Private/Admin
  */
-const deleteUser = asyncHandler(async (req, res) => {
+const toggleUserBlock = asyncHandler(async (req, res) => {
   const { id } = req.params;
+  const { isBlocked } = req.body;
 
   const user = await prisma.user.findUnique({
     where: { id },
@@ -157,23 +158,33 @@ const deleteUser = asyncHandler(async (req, res) => {
     throw ApiError.notFound('User not found');
   }
 
-  // Prevent deleting own account
+  // Prevent blocking own account
   if (user.id === req.user.id) {
-    throw ApiError.badRequest('Cannot delete your own account');
+    throw ApiError.badRequest('Cannot block your own account');
   }
 
-  // Prevent deleting other admins
+  // Prevent blocking other admins
   if (user.role === 'ADMIN') {
-    throw ApiError.badRequest('Cannot delete admin users');
+    throw ApiError.badRequest('Cannot block admin users');
   }
 
-  await prisma.user.delete({
+  const updatedUser = await prisma.user.update({
     where: { id },
+    data: { isBlocked: Boolean(isBlocked) },
+    select: {
+      id: true,
+      email: true,
+      firstName: true,
+      lastName: true,
+      role: true,
+      isBlocked: true,
+    },
   });
 
   res.json({
     success: true,
-    message: 'User deleted successfully',
+    message: isBlocked ? 'User blocked successfully' : 'User unblocked successfully',
+    data: updatedUser,
   });
 });
 
@@ -185,19 +196,13 @@ const deleteUser = asyncHandler(async (req, res) => {
 const getDashboardStats = asyncHandler(async (req, res) => {
   const [
     totalUsers,
-    totalBooks,
     totalCategories,
-    totalDownloads,
     recentUsers,
-    recentDownloads,
-    topBooks,
   ] = await Promise.all([
     prisma.user.count(),
-    prisma.book.count(),
     prisma.category.count(),
-    prisma.download.count(),
     prisma.user.findMany({
-      take: 5,
+      take: 10,
       orderBy: { createdAt: 'desc' },
       select: {
         id: true,
@@ -207,55 +212,12 @@ const getDashboardStats = asyncHandler(async (req, res) => {
         createdAt: true,
       },
     }),
-    prisma.download.findMany({
-      take: 10,
-      orderBy: { downloadedAt: 'desc' },
-      include: {
-        user: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-          },
-        },
-        book: {
-          select: {
-            id: true,
-            title: true,
-          },
-        },
-      },
-    }),
-    prisma.book.findMany({
-      take: 5,
-      orderBy: { downloadCount: 'desc' },
-      select: {
-        id: true,
-        title: true,
-        downloadCount: true,
-        coverUrl: true,
-      },
-    }),
   ]);
 
-  // Get user registration stats for last 7 days
-  const sevenDaysAgo = new Date();
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-
-  const userRegistrations = await prisma.user.groupBy({
-    by: ['createdAt'],
-    where: {
-      createdAt: {
-        gte: sevenDaysAgo,
-      },
-    },
-    _count: true,
-  });
-
-  // Format recent activity
-  const recentActivity = recentDownloads.map((d) => ({
-    text: `${d.user.firstName} ${d.user.lastName} завантажив "${d.book.title}"`,
-    time: new Date(d.downloadedAt).toLocaleDateString('uk-UA', {
+  // Format recent activity - show user registrations
+  const recentActivity = recentUsers.map((user) => ({
+    text: `${user.firstName} ${user.lastName} (${user.email}) зареєструвався`,
+    time: new Date(user.createdAt).toLocaleDateString('uk-UA', {
       day: 'numeric',
       month: 'short',
       hour: '2-digit',
@@ -267,14 +229,9 @@ const getDashboardStats = asyncHandler(async (req, res) => {
     success: true,
     data: {
       totalUsers,
-      totalBooks,
       totalCategories,
-      totalDownloads,
       recentUsers,
-      recentDownloads,
       recentActivity,
-      topBooks,
-      userRegistrations,
     },
   });
 });
@@ -412,7 +369,7 @@ module.exports = {
   getUsers,
   getUserById,
   updateUserRole,
-  deleteUser,
+  toggleUserBlock,
   getDashboardStats,
   getAuthors,
   createAuthor,

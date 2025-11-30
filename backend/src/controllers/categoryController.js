@@ -13,7 +13,7 @@ const { generateSlug, paginate, paginationResponse } = require('../utils/helpers
  * @access  Public
  */
 const getCategories = asyncHandler(async (req, res) => {
-  const { page, limit, withBookCount } = req.query;
+  const { page, limit } = req.query;
 
   if (page && limit) {
     const { skip, take } = paginate(parseInt(page, 10), parseInt(limit, 10));
@@ -23,13 +23,6 @@ const getCategories = asyncHandler(async (req, res) => {
         skip,
         take,
         orderBy: { name: 'asc' },
-        ...(withBookCount === 'true' && {
-          include: {
-            _count: {
-              select: { books: true },
-            },
-          },
-        }),
       }),
       prisma.category.count(),
     ]);
@@ -42,13 +35,6 @@ const getCategories = asyncHandler(async (req, res) => {
 
   const categories = await prisma.category.findMany({
     orderBy: { name: 'asc' },
-    ...(withBookCount === 'true' && {
-      include: {
-        _count: {
-          select: { books: true },
-        },
-      },
-    }),
   });
 
   res.json({
@@ -69,11 +55,6 @@ const getCategoryById = asyncHandler(async (req, res) => {
     where: {
       OR: [{ id }, { slug: id }],
     },
-    include: {
-      _count: {
-        select: { books: true },
-      },
-    },
   });
 
   if (!category) {
@@ -87,14 +68,13 @@ const getCategoryById = asyncHandler(async (req, res) => {
 });
 
 /**
- * @desc    Get books by category
+ * @desc    Get books by category (from Open Library)
  * @route   GET /api/categories/:id/books
  * @access  Public
  */
 const getBooksByCategory = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { page = 1, limit = 10 } = req.query;
-  const { skip, take } = paginate(parseInt(page, 10), parseInt(limit, 10));
 
   // Find category first
   const category = await prisma.category.findFirst({
@@ -107,60 +87,33 @@ const getBooksByCategory = asyncHandler(async (req, res) => {
     throw ApiError.notFound('Category not found');
   }
 
-  const [books, total] = await Promise.all([
-    prisma.book.findMany({
-      where: {
-        categories: {
-          some: { categoryId: category.id },
-        },
-      },
-      skip,
-      take,
-      include: {
-        authors: {
-          include: { author: true },
-        },
-        categories: {
-          include: { category: true },
-        },
-      },
-      orderBy: { createdAt: 'desc' },
-    }),
-    prisma.book.count({
-      where: {
-        categories: {
-          some: { categoryId: category.id },
-        },
-      },
-    }),
-  ]);
+  // Use bookService to search books by category from Open Library
+  const bookService = require('../services/bookService');
+  const { getOpenLibrarySubject } = require('../utils/categoryMapper');
+  
+  // Try to map category slug to Open Library subject
+  const olSubject = getOpenLibrarySubject(category.slug);
+  
+  // If we have a mapping, use it, otherwise use category name
+  const searchSubject = olSubject || category.name.toLowerCase();
 
-  const transformedBooks = books.map((book) => ({
-    id: book.id,
-    title: book.title,
-    description: book.description,
-    coverUrl: book.coverUrl,
-    publishYear: book.publishYear,
-    language: book.language,
-    authors: book.authors.map((ba) => ({
-      id: ba.author.id,
-      name: ba.author.name,
-    })),
-    categories: book.categories.map((bc) => ({
-      id: bc.category.id,
-      name: bc.category.name,
-      slug: bc.category.slug,
-    })),
-  }));
+  const results = await bookService.searchBooks({
+    category: searchSubject,
+    page: parseInt(page, 10),
+    limit: parseInt(limit, 10),
+  });
 
   res.json({
     success: true,
     category: {
       id: category.id,
       name: category.name,
+      nameUk: category.nameUk,
       slug: category.slug,
+      description: category.description,
     },
-    ...paginationResponse(transformedBooks, total, parseInt(page, 10), parseInt(limit, 10)),
+    data: results.data || [],
+    total: results.total || 0,
   });
 });
 
@@ -248,19 +201,10 @@ const deleteCategory = asyncHandler(async (req, res) => {
 
   const category = await prisma.category.findUnique({
     where: { id },
-    include: {
-      _count: {
-        select: { books: true },
-      },
-    },
   });
 
   if (!category) {
     throw ApiError.notFound('Category not found');
-  }
-
-  if (category._count.books > 0) {
-    throw ApiError.badRequest('Cannot delete category with books. Remove books first.');
   }
 
   await prisma.category.delete({

@@ -9,40 +9,34 @@ import './BooksPage.css';
 
 const BooksPage = () => {
   const { t } = useTranslation();
-  const { id: categoryId } = useParams(); // Get category from URL if /categories/:id
+  const { id: categoryId } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
   
-  // If we came from /categories/:id, use that as category
   const initialCategory = categoryId || searchParams.get('category') || '';
-  // If category is set, default to 'all' sources to show both local and Open Library
-  const initialSource = searchParams.get('source') || (initialCategory ? 'all' : 'all');
   
   const [filters, setFilters] = useState({
     q: searchParams.get('q') || '',
     category: initialCategory,
     language: searchParams.get('language') || '',
-    source: initialSource,
+    title: searchParams.get('title') || '',
+    author: searchParams.get('author') || '',
+    publisher: searchParams.get('publisher') || '',
+    keywords: searchParams.get('keywords') || '',
+    yearFrom: searchParams.get('yearFrom') || '',
+    yearTo: searchParams.get('yearTo') || '',
   });
   const [page, setPage] = useState(1);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
   const { data: categoriesData } = useCategories();
-  // Always enable search - even if no query, we might have category
   const { data, isLoading, isFetching } = useSearchBooks(
     { ...filters, page, limit: 12 },
-    true // Always enabled
+    true
   );
 
   const categories = categoriesData?.data || [];
-  const localBooks = data?.data?.local?.data || [];
-  const openLibraryBooks = data?.data?.openLibrary?.data || [];
-  const allBooks = filters.source === 'local' 
-    ? localBooks 
-    : filters.source === 'openlibrary'
-    ? openLibraryBooks
-    : [...localBooks, ...openLibraryBooks];
+  const books = data?.data || [];
 
-  // Update filters when categoryId changes (from URL)
   useEffect(() => {
     if (categoryId && categoryId !== filters.category) {
       setFilters((prev) => ({ ...prev, category: categoryId }));
@@ -68,11 +62,23 @@ const BooksPage = () => {
   };
 
   const clearFilters = () => {
-    setFilters({ q: '', category: '', language: '', source: 'all' });
+    setFilters({ 
+      q: '', 
+      category: '', 
+      language: '', 
+      title: '',
+      author: '',
+      publisher: '',
+      keywords: '',
+      yearFrom: '',
+      yearTo: '',
+    });
     setPage(1);
   };
 
-  const hasActiveFilters = filters.category || filters.language || filters.source !== 'all';
+  const hasActiveFilters = filters.category || filters.language || 
+    filters.title || filters.author || filters.publisher || filters.keywords || 
+    filters.yearFrom || filters.yearTo;
 
   return (
     <div className="books-page">
@@ -99,7 +105,6 @@ const BooksPage = () => {
           )}
         </header>
 
-        {/* Search and Filter Bar */}
         <div className="books-page__toolbar">
           <form className="books-page__search" onSubmit={handleSearch}>
             <Search size={20} className="books-page__search-icon" />
@@ -122,21 +127,8 @@ const BooksPage = () => {
           </Button>
         </div>
 
-        {/* Filters Panel */}
         {isFilterOpen && (
           <div className="books-page__filters">
-            <div className="books-page__filter-group">
-              <label>{t('common.search')}</label>
-              <select
-                value={filters.source}
-                onChange={(e) => handleFilterChange('source', e.target.value)}
-              >
-                <option value="all">{t('common.allSources')}</option>
-                <option value="local">{t('common.localLibrary')}</option>
-                <option value="openlibrary">{t('common.openLibrary')}</option>
-              </select>
-            </div>
-
             <div className="books-page__filter-group">
               <label>{t('books.category')}</label>
               <select
@@ -166,6 +158,70 @@ const BooksPage = () => {
               </select>
             </div>
 
+            <div className="books-page__filter-group">
+              <label>{t('books.title') || 'Title'}</label>
+              <input
+                type="text"
+                placeholder={t('books.titlePlaceholder') || 'Enter book title'}
+                value={filters.title}
+                onChange={(e) => handleFilterChange('title', e.target.value)}
+              />
+            </div>
+
+            <div className="books-page__filter-group">
+              <label>{t('books.author') || 'Author'}</label>
+              <input
+                type="text"
+                placeholder={t('books.authorPlaceholder') || 'Enter author name'}
+                value={filters.author}
+                onChange={(e) => handleFilterChange('author', e.target.value)}
+              />
+            </div>
+
+            <div className="books-page__filter-group">
+              <label>{t('books.publisher') || 'Publisher'}</label>
+              <input
+                type="text"
+                placeholder={t('books.publisherPlaceholder') || 'Enter publisher name'}
+                value={filters.publisher}
+                onChange={(e) => handleFilterChange('publisher', e.target.value)}
+              />
+            </div>
+
+            <div className="books-page__filter-group">
+              <label>{t('books.keywords') || 'Keywords'}</label>
+              <input
+                type="text"
+                placeholder={t('books.keywordsPlaceholder') || 'Enter keywords'}
+                value={filters.keywords}
+                onChange={(e) => handleFilterChange('keywords', e.target.value)}
+              />
+            </div>
+
+            <div className="books-page__filter-group">
+              <label>{t('books.publishYear') || 'Publish Year (From)'}</label>
+              <input
+                type="number"
+                placeholder={t('books.yearFromPlaceholder') || 'From year'}
+                value={filters.yearFrom}
+                onChange={(e) => handleFilterChange('yearFrom', e.target.value)}
+                min="1000"
+                max="9999"
+              />
+            </div>
+
+            <div className="books-page__filter-group">
+              <label>{t('books.publishYearTo') || 'Publish Year (To)'}</label>
+              <input
+                type="number"
+                placeholder={t('books.yearToPlaceholder') || 'To year'}
+                value={filters.yearTo}
+                onChange={(e) => handleFilterChange('yearTo', e.target.value)}
+                min="1000"
+                max="9999"
+              />
+            </div>
+
             {hasActiveFilters && (
               <Button variant="ghost" size="sm" onClick={clearFilters}>
                 <X size={16} />
@@ -175,7 +231,6 @@ const BooksPage = () => {
           </div>
         )}
 
-        {/* Results */}
         <div className="books-page__results">
           {isLoading ? (
             <div className="books-page__loading">
@@ -183,42 +238,18 @@ const BooksPage = () => {
             </div>
           ) : (
             <>
-              {filters.source !== 'openlibrary' && localBooks.length > 0 && (
+              {books.length > 0 ? (
                 <section className="books-page__section">
-                  <h2>{t('books.fromOurLibrary')} ({localBooks.length})</h2>
-                  <BookGrid books={localBooks} />
+                  <BookGrid books={books} />
                 </section>
-              )}
-
-              {filters.source !== 'local' && openLibraryBooks.length > 0 && (
-                <section className="books-page__section">
-                  <h2>{t('books.fromOpenLibrary')} ({openLibraryBooks.length})</h2>
-                  <BookGrid books={openLibraryBooks} showActions={false} />
-                </section>
-              )}
-              
-              {/* Show message if category is selected but no books found */}
-              {filters.category && allBooks.length === 0 && !isLoading && (
-                <div className="books-page__empty">
-                  <div className="books-page__empty-icon">
-                    <BookOpen size={48} />
-                  </div>
-                  <h3>{t('books.categoryNotFound')}</h3>
-                  <p>{t('books.tryAnotherCategory')}</p>
-                  <Button variant="secondary" onClick={clearFilters}>
-                    {t('books.showAllBooks')}
-                  </Button>
-                </div>
-              )}
-
-              {allBooks.length === 0 && !filters.category && (
+              ) : (
                 <div className="books-page__empty">
                   <div className="books-page__empty-icon">
                     <BookOpen size={48} />
                   </div>
                   <h3>{t('books.noResults')}</h3>
                   <p>{t('books.tryDifferentQuery')}</p>
-                  {filters.q && (
+                  {hasActiveFilters && (
                     <Button variant="secondary" onClick={clearFilters}>
                       {t('books.clearFilters')}
                     </Button>
@@ -229,8 +260,7 @@ const BooksPage = () => {
           )}
         </div>
 
-        {/* Pagination */}
-        {allBooks.length > 0 && (
+        {books.length > 0 && (
           <div className="books-page__pagination">
             <Button
               variant="secondary"
@@ -242,7 +272,7 @@ const BooksPage = () => {
             <span className="books-page__page">{t('common.page')} {page}</span>
             <Button
               variant="secondary"
-              disabled={allBooks.length < 12}
+              disabled={books.length < 12}
               onClick={() => setPage((p) => p + 1)}
             >
               {t('common.next')}
@@ -255,4 +285,3 @@ const BooksPage = () => {
 };
 
 export default BooksPage;
-

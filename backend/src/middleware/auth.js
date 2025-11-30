@@ -33,6 +33,7 @@ const authenticate = asyncHandler(async (req, res, next) => {
         firstName: true,
         lastName: true,
         role: true,
+        isBlocked: true,
         avatar: true,
         createdAt: true,
       },
@@ -40,6 +41,11 @@ const authenticate = asyncHandler(async (req, res, next) => {
 
     if (!user) {
       throw ApiError.unauthorized('User not found');
+    }
+
+    // Check if user is blocked
+    if (user.isBlocked) {
+      throw ApiError.forbidden('Ваш акаунт заблоковано. Зверніться до адміністратора для отримання допомоги.');
     }
 
     // Attach user to request

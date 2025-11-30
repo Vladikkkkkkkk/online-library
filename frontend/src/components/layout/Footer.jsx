@@ -24,7 +24,6 @@ const Footer = () => {
               <h4>Library</h4>
               <Link to="/books">All Books</Link>
               <Link to="/categories">Categories</Link>
-              <Link to="/books?source=openlibrary">Open Library</Link>
             </div>
 
             <div className="footer__links-group">
@@ -48,10 +47,10 @@ const Footer = () => {
             © {currentYear} Online Library. Made with <Heart size={14} className="footer__heart" /> for readers.
           </p>
           <div className="footer__social">
-            <a href="https://github.com" target="_blank" rel="noopener noreferrer" aria-label="GitHub">
+            <a href="https://github.com/Vladikkkkkkkk" target="_blank" rel="noopener noreferrer" aria-label="GitHub">
               <Github size={20} />
             </a>
-            <a href="mailto:contact@library.com" aria-label="Email">
+            <a href="mailto:khmilvl@gmail.com" aria-label="Email">
               <Mail size={20} />
             </a>
           </div>

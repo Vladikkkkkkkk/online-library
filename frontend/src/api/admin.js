@@ -23,8 +23,8 @@ export const adminApi = {
     return response.data;
   },
 
-  deleteUser: async (id) => {
-    const response = await apiClient.delete(`/admin/users/${id}`);
+  toggleUserBlock: async (id, isBlocked) => {
+    const response = await apiClient.put(`/admin/users/${id}/block`, { isBlocked });
     return response.data;
   },
 

@@ -24,7 +24,22 @@ const errorHandler = (err, req, res, next) => {
 
   // Prisma errors handling
   if (err.code === 'P2002') {
-    error = ApiError.conflict('Duplicate field value entered');
+    // Get more details about which field caused the duplicate
+    const target = err.meta?.target;
+    let message = 'Duplicate field value entered';
+    
+    if (target && Array.isArray(target)) {
+      const fieldName = target[0];
+      if (fieldName === 'isbn') {
+        message = 'A book with this ISBN already exists';
+      } else if (fieldName === 'open_library_id') {
+        message = 'A book with this Open Library ID already exists';
+      } else {
+        message = `Duplicate value for field: ${fieldName}`;
+      }
+    }
+    
+    error = ApiError.conflict(message);
   }
   if (err.code === 'P2025') {
     error = ApiError.notFound('Record not found');

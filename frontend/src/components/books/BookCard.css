@@ -67,11 +67,57 @@
 .book-card__authors {
   font-size: 0.8125rem;
   color: var(--color-text-muted);
-  margin: 0;
+  margin: 0 0 0.5rem;
   display: -webkit-box;
   -webkit-line-clamp: 1;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+.book-card__rating {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.book-card__stars {
+  display: flex;
+  gap: 0.125rem;
+  align-items: center;
+}
+
+.book-card__star {
+  color: #fbbf24;
+  flex-shrink: 0;
+}
+
+.book-card__rating-value {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.book-card__rating-count {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+.book-card__categories {
+  display: flex;
+  gap: 0.25rem;
+  flex-wrap: wrap;
+  margin-top: 0.5rem;
+}
+
+.book-card__category {
+  font-size: 0.7rem;
+  padding: 0.2rem 0.5rem;
+  background: var(--color-primary-light, rgba(0, 123, 255, 0.1));
+  color: var(--color-primary);
+  border-radius: var(--radius-sm);
+  font-weight: 500;
 }
 
 .book-card__actions {

@@ -21,7 +21,7 @@ const config = {
   upload: {
     maxFileSize: parseInt(process.env.MAX_FILE_SIZE, 10) || 52428800, // 50MB
     uploadDir: process.env.UPLOAD_DIR || 'uploads/books',
-    allowedFormats: ['pdf', 'epub', 'mobi', 'fb2'],
+    allowedFormats: ['pdf'], // Only PDF format allowed
   },
   
   // CORS settings

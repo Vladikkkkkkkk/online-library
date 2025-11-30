@@ -12,17 +12,13 @@ router.get('/', userLibraryController.getSavedBooks);
 // Get user's stats
 router.get('/stats', userLibraryController.getUserStats);
 
-// Get download history
-router.get('/downloads', userLibraryController.getDownloadHistory);
-
 // Check if book is saved
-router.get('/:bookId/status', userLibraryController.checkBookStatus);
+router.get('/:openLibraryId/status', userLibraryController.checkBookStatus);
 
 // Save book to library
-router.post('/:bookId', userLibraryController.saveBook);
+router.post('/:openLibraryId', userLibraryController.saveBook);
 
 // Remove book from library
-router.delete('/:bookId', userLibraryController.removeBook);
+router.delete('/:openLibraryId', userLibraryController.removeBook);
 
 module.exports = router;
-

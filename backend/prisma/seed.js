@@ -36,7 +36,7 @@ async function main() {
   });
   console.log('✅ Test user created:', user.email);
 
-  // Create categories
+  // Create categories (for filtering/search purposes)
   const categories = [
     { name: 'Fiction', nameUk: 'Художня література', slug: 'fiction', description: 'Fictional works including novels and short stories' },
     { name: 'Science Fiction', nameUk: 'Наукова фантастика', slug: 'science-fiction', description: 'Science fiction and fantasy books' },
@@ -61,93 +61,73 @@ async function main() {
   }
   console.log('✅ Categories created:', categories.length);
 
-  // Create sample authors
-  const authors = [
-    { name: 'Taras Shevchenko', biography: 'Ukrainian poet, writer, artist', birthYear: 1814, deathYear: 1861 },
-    { name: 'Ivan Franko', biography: 'Ukrainian poet, writer, scholar', birthYear: 1856, deathYear: 1916 },
-    { name: 'Lesya Ukrainka', biography: 'Ukrainian poet, writer, playwright', birthYear: 1871, deathYear: 1913 },
-    { name: 'George Orwell', biography: 'English novelist and essayist', birthYear: 1903, deathYear: 1950 },
-    { name: 'Jane Austen', biography: 'English novelist', birthYear: 1775, deathYear: 1817 },
+  // Create sample saved books for test user (from Open Library)
+  const sampleSavedBooks = [
+    { openLibraryId: 'OL1168083W' }, // 1984
+    { openLibraryId: 'OL66554W' },   // Pride and Prejudice
   ];
 
-  const createdAuthors = [];
-  for (const author of authors) {
-    const created = await prisma.author.upsert({
-      where: { id: author.name.toLowerCase().replace(/\s+/g, '-') },
-      update: {},
-      create: author,
+  for (const savedBook of sampleSavedBooks) {
+    const existing = await prisma.savedBook.findFirst({
+      where: {
+        userId: user.id,
+        openLibraryId: savedBook.openLibraryId,
+      },
     });
-    createdAuthors.push(created);
-  }
-  console.log('✅ Authors created:', authors.length);
 
-  // Create sample books
-  const fictionCategory = await prisma.category.findUnique({ where: { slug: 'fiction' } });
-  const classicCategory = await prisma.category.findUnique({ where: { slug: 'classic' } });
-  const poetryCategory = await prisma.category.findUnique({ where: { slug: 'poetry' } });
-
-  const sampleBooks = [
-    {
-      title: 'Kobzar',
-      description: 'A collection of poems by Taras Shevchenko, the greatest Ukrainian poet.',
-      publishYear: 1840,
-      language: 'uk',
-      coverUrl: 'https://covers.openlibrary.org/b/id/8234428-L.jpg',
-      authorIndex: 0,
-      categories: [poetryCategory?.id, classicCategory?.id].filter(Boolean),
-    },
-    {
-      title: '1984',
-      description: 'A dystopian social science fiction novel and cautionary tale by George Orwell.',
-      publishYear: 1949,
-      language: 'en',
-      isbn: '9780451524935',
-      coverUrl: 'https://covers.openlibrary.org/b/id/7222246-L.jpg',
-      openLibraryId: 'OL1168083W',
-      authorIndex: 3,
-      categories: [fictionCategory?.id, classicCategory?.id].filter(Boolean),
-    },
-    {
-      title: 'Pride and Prejudice',
-      description: 'A romantic novel following the character development of Elizabeth Bennet.',
-      publishYear: 1813,
-      language: 'en',
-      isbn: '9780141439518',
-      coverUrl: 'https://covers.openlibrary.org/b/id/8234234-L.jpg',
-      openLibraryId: 'OL66554W',
-      authorIndex: 4,
-      categories: [fictionCategory?.id, classicCategory?.id].filter(Boolean),
-    },
-  ];
-
-  for (const bookData of sampleBooks) {
-    const { authorIndex, categories, ...bookFields } = bookData;
-    
-    const existingBook = bookFields.isbn 
-      ? await prisma.book.findUnique({ where: { isbn: bookFields.isbn } })
-      : await prisma.book.findFirst({ where: { title: bookFields.title } });
-
-    if (!existingBook) {
-      await prisma.book.create({
+    if (!existing) {
+      await prisma.savedBook.create({
         data: {
-          ...bookFields,
-          authors: {
-            create: {
-              author: { connect: { id: createdAuthors[authorIndex].id } },
-            },
-          },
-          categories: {
-            create: categories.map((categoryId) => ({
-              category: { connect: { id: categoryId } },
-            })),
-          },
+          userId: user.id,
+          openLibraryId: savedBook.openLibraryId,
         },
       });
     }
   }
-  console.log('✅ Sample books created');
+  console.log('✅ Sample saved books created:', sampleSavedBooks.length);
+
+  // Create sample playlists for test user
+  const samplePlaylists = [
+    {
+      name: 'My Favorites',
+      description: 'My favorite books',
+      isPublic: false,
+      books: ['OL1168083W'], // 1984
+    },
+    {
+      name: 'Classic Literature',
+      description: 'Classic books I want to read',
+      isPublic: true,
+      books: ['OL66554W'], // Pride and Prejudice
+    },
+  ];
+
+  for (const playlistData of samplePlaylists) {
+    const { books, ...playlistFields } = playlistData;
+    const playlist = await prisma.playlist.create({
+      data: {
+        ...playlistFields,
+        userId: user.id,
+      },
+    });
+
+    // Add books to playlist
+    for (let i = 0; i < books.length; i++) {
+      await prisma.playlistBook.create({
+        data: {
+          playlistId: playlist.id,
+          openLibraryId: books[i],
+          order: i,
+        },
+      });
+    }
+  }
+  console.log('✅ Sample playlists created:', samplePlaylists.length);
 
   console.log('🎉 Seed completed successfully!');
+  console.log('\n📋 Test Accounts:');
+  console.log('   Admin: admin@library.com / admin123');
+  console.log('   User:  user@library.com / user123');
 }
 
 main()
@@ -158,4 +138,3 @@ main()
   .finally(async () => {
     await prisma.$disconnect();
   });
-

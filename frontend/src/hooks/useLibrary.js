@@ -12,11 +12,11 @@ export const useSavedBooks = (params) => {
 };
 
 // Check if book is saved
-export const useBookStatus = (bookId, source = 'local') => {
+export const useBookStatus = (openLibraryId) => {
   return useQuery({
-    queryKey: ['library', 'status', bookId, source],
-    queryFn: () => libraryApi.checkStatus(bookId, source),
-    enabled: !!bookId,
+    queryKey: ['library', 'status', openLibraryId],
+    queryFn: () => libraryApi.checkStatus(openLibraryId),
+    enabled: !!openLibraryId,
   });
 };
 
@@ -25,10 +25,10 @@ export const useSaveBook = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ bookId, source = 'local' }) => libraryApi.saveBook(bookId, source),
-    onSuccess: (_, { bookId, source = 'local' }) => {
+    mutationFn: ({ openLibraryId }) => libraryApi.saveBook(openLibraryId),
+    onSuccess: (_, { openLibraryId }) => {
       queryClient.invalidateQueries(['library']);
-      queryClient.setQueryData(['library', 'status', bookId, source], { success: true, data: { isSaved: true } });
+      queryClient.setQueryData(['library', 'status', openLibraryId], { success: true, data: { isSaved: true } });
       toast.success('Book saved to library!');
     },
     onError: (error) => {
@@ -42,24 +42,15 @@ export const useRemoveBook = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ bookId, source = 'local' }) => libraryApi.removeBook(bookId, source),
-    onSuccess: (_, { bookId, source = 'local' }) => {
+    mutationFn: ({ openLibraryId }) => libraryApi.removeBook(openLibraryId),
+    onSuccess: (_, { openLibraryId }) => {
       queryClient.invalidateQueries(['library']);
-      queryClient.setQueryData(['library', 'status', bookId, source], { success: true, data: { isSaved: false } });
+      queryClient.setQueryData(['library', 'status', openLibraryId], { success: true, data: { isSaved: false } });
       toast.success('Book removed from library!');
     },
     onError: (error) => {
       toast.error(error.response?.data?.message || error.message || 'Failed to remove book');
     },
-  });
-};
-
-// Get download history
-export const useDownloadHistory = (params) => {
-  return useQuery({
-    queryKey: ['library', 'downloads', params],
-    queryFn: () => libraryApi.getDownloadHistory(params),
-    staleTime: 2 * 60 * 1000,
   });
 };
 
@@ -71,4 +62,3 @@ export const useUserStats = () => {
     staleTime: 5 * 60 * 1000,
   });
 };
-

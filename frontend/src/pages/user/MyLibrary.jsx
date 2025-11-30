@@ -27,9 +27,9 @@ const MyLibrary = () => {
     return title.includes(query) || authors.includes(query);
   });
 
-  const handleRemoveBook = async (bookId, bookTitle, source = 'local') => {
+  const handleRemoveBook = async (openLibraryId, bookTitle) => {
     if (window.confirm(t('library.removeConfirm', { title: bookTitle }))) {
-      removeBook.mutate({ bookId, source }, {
+      removeBook.mutate({ openLibraryId }, {
         onSuccess: () => {
           toast.success(t('library.removed'));
         },
@@ -45,9 +45,9 @@ const MyLibrary = () => {
     .filter(item => item.book) // Filter out items without book data
     .map((item) => ({
       ...item.book,
-      id: item.book.id || item.openLibraryId, // Use openLibraryId if id is missing
+      id: item.openLibraryId || item.book.id, // Use openLibraryId as primary ID
+      openLibraryId: item.openLibraryId,
       savedAt: item.savedAt,
-      source: item.source, // Include source for navigation
     }));
 
   return (

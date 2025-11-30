@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Search, Edit2, Trash2, Eye, Upload } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2, Eye } from 'lucide-react';
 import { adminApi } from '../../api/admin';
 import { booksApi } from '../../api/books';
 import { Button, Loader } from '../../components/common';
@@ -15,14 +15,19 @@ const BooksManagement = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const queryClient = useQueryClient();
 
-  const { data: booksData, isLoading } = useQuery({
+  const { data: booksData, isLoading, error } = useQuery({
     queryKey: ['admin', 'books', currentPage, searchQuery],
-    queryFn: () => booksApi.getBooks({ 
+    queryFn: () => booksApi.getAll({ 
       page: currentPage, 
       limit: 10,
-      q: searchQuery || undefined 
+      q: searchQuery || undefined
     }),
   });
+  
+  // Log for debugging
+  if (error) {
+    console.error('BooksManagement error:', error);
+  }
 
   const deleteMutation = useMutation({
     mutationFn: (bookId) => adminApi.deleteBook(bookId),
@@ -35,8 +40,16 @@ const BooksManagement = () => {
     },
   });
 
+  // Handle response structure from getAll endpoint
+  // Response: { success: true, data: [...books], pagination: {...} }
   const books = booksData?.data || [];
-  const pagination = booksData?.pagination || { totalPages: 1 };
+  const totalPages = booksData?.pagination?.totalPages || 1;
+  const pagination = { totalPages };
+  
+  // Debug logging
+  console.log('BooksManagement - Full response:', booksData);
+  console.log('BooksManagement - Books array:', books);
+  console.log('BooksManagement - Total pages:', totalPages);
 
   const handleDelete = (bookId, bookTitle) => {
     if (window.confirm(`Видалити книгу "${bookTitle}"?`)) {
@@ -54,12 +67,6 @@ const BooksManagement = () => {
       <div className="admin-books__header">
         <h1 className="admin-books__title">Управління книгами</h1>
         <div style={{ display: 'flex', gap: '0.5rem' }}>
-          <Link to="/admin/books/import">
-            <Button variant="secondary">
-              <Upload size={18} />
-              Імпорт
-            </Button>
-          </Link>
           <Link to="/admin/books/new">
             <Button>
               <Plus size={18} />
@@ -133,7 +140,7 @@ const BooksManagement = () => {
                         <div>
                           <div className="admin-table__book-title">{book.title}</div>
                           <div className="admin-table__book-authors">
-                            {book.authors?.map((a) => a.name).join(', ') || 'Невідомий автор'}
+                            {book.authors?.map((a) => (typeof a === 'string' ? a : a.name || a.author?.name || '')).filter(Boolean).join(', ') || 'Невідомий автор'}
                           </div>
                         </div>
                       </div>

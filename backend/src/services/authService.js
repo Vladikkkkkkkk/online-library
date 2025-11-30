@@ -69,6 +69,11 @@ class AuthService {
       throw ApiError.unauthorized('Invalid credentials');
     }
 
+    // Check if user is blocked
+    if (user.isBlocked) {
+      throw ApiError.forbidden('Ваш акаунт заблоковано. Зверніться до адміністратора для отримання допомоги.');
+    }
+
     // Check password
     const isMatch = await bcrypt.compare(password, user.password);
 
@@ -99,15 +104,10 @@ class AuthService {
         firstName: true,
         lastName: true,
         role: true,
+        isBlocked: true,
         avatar: true,
         createdAt: true,
         updatedAt: true,
-        _count: {
-          select: {
-            savedBooks: true,
-            downloads: true,
-          },
-        },
       },
     });
 

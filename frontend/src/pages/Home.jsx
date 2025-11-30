@@ -9,7 +9,7 @@ import './Home.css';
 const Home = () => {
   const { t } = useTranslation();
   const { data: trendingData, isLoading: trendingLoading } = useTrendingBooks('weekly', 8);
-  const { data: categoriesData, isLoading: categoriesLoading } = useCategories({ withBookCount: 'true' });
+  const { data: categoriesData, isLoading: categoriesLoading } = useCategories();
 
   const trendingBooks = trendingData?.data || [];
   const categories = categoriesData?.data?.slice(0, 8) || [];
@@ -90,7 +90,7 @@ const Home = () => {
         <div className="section__container">
           <div className="section__header">
             <h2 className="section__title">{t('home.trending')}</h2>
-            <Link to="/books?source=openlibrary" className="section__link">
+            <Link to="/books" className="section__link">
               {t('home.viewAll')} <ArrowRight size={18} />
             </Link>
           </div>
@@ -125,10 +125,12 @@ const Home = () => {
                   to={`/categories/${category.slug}`}
                   className="category-card"
                 >
-                  <h3>{category.name}</h3>
-                  {category.nameUk && <span className="category-card__uk">{category.nameUk}</span>}
-                  {category._count?.books > 0 && (
-                    <span className="category-card__count">{category._count.books} books</span>
+                  <h3>{category.nameUk || category.name}</h3>
+                  {category.nameUk && category.name !== category.nameUk && (
+                    <span className="category-card__en">{category.name}</span>
+                  )}
+                  {category.description && (
+                    <p className="category-card__description">{category.description}</p>
                   )}
                 </Link>
               ))}

@@ -12,9 +12,11 @@ import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
 import BooksPage from './pages/books/BooksPage';
 import BookDetail from './pages/books/BookDetail';
-import BookReader from './pages/books/BookReader';
+import CategoriesPage from './pages/categories';
+import PlaylistsPage from './pages/playlists/PlaylistsPage';
+import PlaylistDetail from './pages/playlists/PlaylistDetail';
 import { Profile, Settings, MyLibrary } from './pages/user';
-import { Dashboard, BooksManagement, UsersManagement, BookForm, ImportBooks } from './pages/admin';
+import { Dashboard, UsersManagement } from './pages/admin';
 import NotFound from './pages/NotFound';
 
 import './styles/index.css';
@@ -86,8 +88,7 @@ function App() {
             <Route index element={<Home />} />
             <Route path="books" element={<BooksPage />} />
             <Route path="books/:id" element={<BookDetail />} />
-            <Route path="books/:id/read" element={<BookReader />} />
-            <Route path="categories" element={<BooksPage />} />
+            <Route path="categories" element={<CategoriesPage />} />
             <Route path="categories/:id" element={<BooksPage />} />
           </Route>
 
@@ -120,6 +121,22 @@ function App() {
               }
             />
             <Route
+              path="playlists"
+              element={
+                <ProtectedRoute>
+                  <PlaylistsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="playlists/:id"
+              element={
+                <ProtectedRoute>
+                  <PlaylistDetail />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="profile"
               element={
                 <ProtectedRoute>
@@ -148,50 +165,10 @@ function App() {
               }
             />
             <Route
-              path="admin/books"
-              element={
-                <AdminRoute>
-                  <BooksManagement />
-                </AdminRoute>
-              }
-            />
-            <Route
-              path="admin/books/new"
-              element={
-                <AdminRoute>
-                  <BookForm />
-                </AdminRoute>
-              }
-            />
-            <Route
-              path="admin/books/:id/edit"
-              element={
-                <AdminRoute>
-                  <BookForm />
-                </AdminRoute>
-              }
-            />
-            <Route
-              path="admin/books/import"
-              element={
-                <AdminRoute>
-                  <ImportBooks />
-                </AdminRoute>
-              }
-            />
-            <Route
               path="admin/users"
               element={
                 <AdminRoute>
                   <UsersManagement />
-                </AdminRoute>
-              }
-            />
-            <Route
-              path="admin/categories"
-              element={
-                <AdminRoute>
-                  <Dashboard />
                 </AdminRoute>
               }
             />

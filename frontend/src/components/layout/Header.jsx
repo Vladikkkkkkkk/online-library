@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Search, Menu, X, User, LogOut, Settings, BookOpen, Shield, Globe } from 'lucide-react';
+import { Search, Menu, X, User, LogOut, Settings, BookOpen, Shield, Globe, Music } from 'lucide-react';
 import useAuthStore from '../../context/authStore';
 import './Header.css';
 
@@ -76,6 +76,10 @@ const Header = () => {
                 <Link to="/library" className="header__dropdown-item" onClick={() => setIsMenuOpen(false)}>
                   <BookOpen size={18} />
                   <span>{t('nav.library')}</span>
+                </Link>
+                <Link to="/playlists" className="header__dropdown-item" onClick={() => setIsMenuOpen(false)}>
+                  <Music size={18} />
+                  <span>Playlists</span>
                 </Link>
                 <Link to="/settings" className="header__dropdown-item" onClick={() => setIsMenuOpen(false)}>
                   <Settings size={18} />

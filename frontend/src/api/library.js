@@ -7,27 +7,21 @@ export const libraryApi = {
     return response.data;
   },
 
-  // Save book to library
-  saveBook: async (bookId, source = 'local') => {
-    const response = await apiClient.post(`/library/${bookId}`, { source });
+  // Save book to library (Open Library books only)
+  saveBook: async (openLibraryId) => {
+    const response = await apiClient.post(`/library/${openLibraryId}`);
     return response.data;
   },
 
   // Remove book from library
-  removeBook: async (bookId, source = 'local') => {
-    const response = await apiClient.delete(`/library/${bookId}`, { params: { source } });
+  removeBook: async (openLibraryId) => {
+    const response = await apiClient.delete(`/library/${openLibraryId}`);
     return response.data;
   },
 
   // Check if book is saved
-  checkStatus: async (bookId, source = 'local') => {
-    const response = await apiClient.get(`/library/${bookId}/status`, { params: { source } });
-    return response.data;
-  },
-
-  // Get download history
-  getDownloadHistory: async (params) => {
-    const response = await apiClient.get('/library/downloads', { params });
+  checkStatus: async (openLibraryId) => {
+    const response = await apiClient.get(`/library/${openLibraryId}/status`);
     return response.data;
   },
 
@@ -37,4 +31,3 @@ export const libraryApi = {
     return response.data;
   },
 };
-

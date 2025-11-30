@@ -1,6 +1,20 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
 import { authApi } from '../api/auth';
+
+// Helper function to read token from localStorage
+const getStoredToken = () => {
+  try {
+    const authData = localStorage.getItem('auth-storage');
+    if (authData) {
+      const parsed = JSON.parse(authData);
+      return parsed?.state?.token || null;
+    }
+  } catch (error) {
+    console.error('Error reading auth storage:', error);
+  }
+  return null;
+};
 
 const useAuthStore = create(
   persist(
@@ -8,21 +22,60 @@ const useAuthStore = create(
       user: null,
       token: null,
       isAuthenticated: false,
-      isLoading: false,
+      isLoading: true,
       error: null,
 
       // Initialize auth state from storage
       initialize: async () => {
-        const token = get().token;
+        // First, try to get token from localStorage directly (fastest)
+        let token = getStoredToken();
+        
+        // Also check state (in case zustand already rehydrated)
+        if (!token) {
+          token = get().token;
+        }
+
+        // If still no token, wait a bit for zustand to rehydrate
+        if (!token) {
+          await new Promise(resolve => setTimeout(resolve, 50));
+          token = get().token || getStoredToken();
+        }
+
+        // If we have a token, verify it with the server
         if (token) {
           try {
-            set({ isLoading: true });
+            set({ isLoading: true, token });
             const response = await authApi.getMe();
-            set({ user: response.data, isAuthenticated: true, isLoading: false });
+            set({ 
+              user: response.data, 
+              token,
+              isAuthenticated: true, 
+              isLoading: false
+            });
           } catch (error) {
-            set({ user: null, token: null, isAuthenticated: false, isLoading: false });
-            localStorage.removeItem('auth-storage');
+            // Token is invalid or expired
+            console.log('Token verification failed, clearing auth:', error.message);
+            set({ 
+              user: null, 
+              token: null, 
+              isAuthenticated: false, 
+              isLoading: false 
+            });
+            // Clear corrupted storage
+            try {
+              localStorage.removeItem('auth-storage');
+            } catch {
+              // Ignore errors
+            }
           }
+        } else {
+          // No token, user is not authenticated
+          set({ 
+            isLoading: false,
+            isAuthenticated: false,
+            user: null,
+            token: null
+          });
         }
       },
 
@@ -75,8 +128,13 @@ const useAuthStore = create(
           token: null,
           isAuthenticated: false,
           error: null,
+          isLoading: false,
         });
-        localStorage.removeItem('auth-storage');
+        try {
+          localStorage.removeItem('auth-storage');
+        } catch {
+          // Ignore errors
+        }
       },
 
       // Update profile
@@ -113,10 +171,14 @@ const useAuthStore = create(
     }),
     {
       name: 'auth-storage',
-      partialize: (state) => ({ token: state.token, user: state.user, isAuthenticated: state.isAuthenticated }),
+      storage: createJSONStorage(() => localStorage),
+      partialize: (state) => ({ 
+        token: state.token, 
+        user: state.user, 
+        isAuthenticated: state.isAuthenticated 
+      }),
     }
   )
 );
 
 export default useAuthStore;
-

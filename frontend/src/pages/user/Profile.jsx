@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { User, Mail, Calendar, BookOpen, Download, Heart, Settings, LogOut } from 'lucide-react';
+import { User, Mail, Calendar, BookOpen, Heart, Settings, LogOut } from 'lucide-react';
 import { useUserStats } from '../../hooks/useLibrary';
 import { Button, Loader } from '../../components/common';
 import useAuthStore from '../../context/authStore';
@@ -96,21 +96,21 @@ const Profile = () => {
                 </div>
               </div>
               <div className="profile__stat-card">
-                <div className="profile__stat-icon profile__stat-icon--downloads">
-                  <Download size={24} />
-                </div>
-                <div className="profile__stat-content">
-                  <span className="profile__stat-value">{stats.downloads || 0}</span>
-                  <span className="profile__stat-label">Завантажень</span>
-                </div>
-              </div>
-              <div className="profile__stat-card">
-                <div className="profile__stat-icon profile__stat-icon--reading">
+                <div className="profile__stat-icon profile__stat-icon--playlists">
                   <BookOpen size={24} />
                 </div>
                 <div className="profile__stat-content">
-                  <span className="profile__stat-value">{stats.readingNow || 0}</span>
-                  <span className="profile__stat-label">Читаю зараз</span>
+                  <span className="profile__stat-value">{stats.playlists || 0}</span>
+                  <span className="profile__stat-label">Плейлистів</span>
+                </div>
+              </div>
+              <div className="profile__stat-card">
+                <div className="profile__stat-icon profile__stat-icon--reviews">
+                  <Heart size={24} />
+                </div>
+                <div className="profile__stat-content">
+                  <span className="profile__stat-value">{stats.reviews || 0}</span>
+                  <span className="profile__stat-label">Відгуків</span>
                 </div>
               </div>
             </div>

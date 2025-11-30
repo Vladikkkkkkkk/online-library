@@ -1,9 +1,12 @@
-import { useParams, useSearchParams, Link, useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import { useParams, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, Heart, BookOpen, Calendar, Globe, User, ExternalLink, Eye } from 'lucide-react';
+import { ArrowLeft, Heart, BookOpen, Calendar, Globe, User, ExternalLink, Music } from 'lucide-react';
 import { useBook } from '../../hooks';
 import { useBookStatus, useSaveBook, useRemoveBook } from '../../hooks/useLibrary';
 import { Button, Loader } from '../../components/common';
+import ReviewSection from '../../components/books/ReviewSection';
+import AddToPlaylist from '../../components/books/AddToPlaylist';
 import useAuthStore from '../../context/authStore';
 import './BookDetail.css';
 
@@ -11,14 +14,12 @@ const DEFAULT_COVER = 'https://via.placeholder.com/300x400/e0e0e0/666666?text=No
 
 const BookDetail = () => {
   const { id } = useParams();
-  const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const source = searchParams.get('source') || 'local';
   const { isAuthenticated } = useAuthStore();
   const { t } = useTranslation();
+  const [showPlaylistModal, setShowPlaylistModal] = useState(false);
 
-  const { data: bookData, isLoading } = useBook(id, source);
-  const { data: statusData } = useBookStatus(id, source);
+  const { data: bookData, isLoading } = useBook(id);
+  const { data: statusData } = useBookStatus(id);
   const saveBook = useSaveBook();
   const removeBook = useRemoveBook();
 
@@ -27,21 +28,11 @@ const BookDetail = () => {
 
   const handleSaveToggle = () => {
     if (isSaved) {
-      removeBook.mutate({ bookId: id, source });
+      removeBook.mutate({ openLibraryId: id });
     } else {
-      saveBook.mutate({ bookId: id, source });
+      saveBook.mutate({ openLibraryId: id });
     }
   };
-
-  const handleRead = () => {
-    navigate(`/books/${id}/read${source === 'openlibrary' ? '?source=openlibrary' : ''}`);
-  };
-
-  // Check if book can be read (has PDF file)
-  const pdfLink = source === 'openlibrary' 
-    ? book?.downloadLinks?.find(link => link.format === 'PDF')
-    : null;
-  const canRead = book?.fileUrl || (source === 'openlibrary' && pdfLink?.url);
 
   if (isLoading) {
     return (
@@ -67,7 +58,13 @@ const BookDetail = () => {
   }
 
   const authors = book.authors?.map(a => a.name || a).join(', ') || 'Unknown Author';
-  const categories = book.categories || book.subjects || [];
+  // Open Library returns subjects as array of strings, not objects
+  const categories = book.subjects || book.categories || [];
+  
+  // Normalize categories - handle both string arrays and object arrays
+  const normalizedCategories = categories.map(cat => 
+    typeof cat === 'string' ? cat : (cat?.name || cat)
+  ).filter(Boolean);
 
   return (
     <div className="book-detail">
@@ -106,7 +103,7 @@ const BookDetail = () => {
               {book.language && (
                 <span className="book-detail__meta-item">
                   <Globe size={16} />
-                  {book.language.toUpperCase()}
+                  {Array.isArray(book.language) ? book.language[0].toUpperCase() : book.language.toUpperCase()}
                 </span>
               )}
               {book.pageCount && (
@@ -117,11 +114,11 @@ const BookDetail = () => {
               )}
             </div>
 
-            {categories.length > 0 && (
+            {normalizedCategories.length > 0 && (
               <div className="book-detail__categories">
-                {categories.slice(0, 5).map((cat, index) => (
+                {normalizedCategories.slice(0, 5).map((cat, index) => (
                   <span key={index} className="book-detail__category">
-                    {cat.name || cat}
+                    {cat}
                   </span>
                 ))}
               </div>
@@ -135,59 +132,52 @@ const BookDetail = () => {
             )}
 
             <div className="book-detail__actions">
-              {/* Read button - available for all users if PDF is available */}
-              {canRead && (
-                <Button
-                  variant="primary"
-                  size="lg"
-                  onClick={handleRead}
-                >
-                  <Eye size={18} />
-                  {t('books.readOnline')}
-                </Button>
-              )}
-
               {/* Save to Library button - available for all authenticated users */}
               {isAuthenticated && (
-                <Button
-                  variant={isSaved ? 'secondary' : 'primary'}
-                  onClick={handleSaveToggle}
-                  loading={saveBook.isPending || removeBook.isPending}
-                >
-                  <Heart size={18} fill={isSaved ? 'currentColor' : 'none'} />
-                  {isSaved ? t('books.saved') : t('books.save')}
-                </Button>
-              )}
-
-              {/* External links for Open Library books */}
-              {source === 'openlibrary' && (
-                <div className="book-detail__external-links">
-                  {/* Read Online on Archive.org if available */}
-                  {book.downloadLinks?.find(link => link.format === 'Read Online') && (
-                    <a
-                      href={book.downloadLinks.find(link => link.format === 'Read Online').url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="book-detail__external-link"
-                    >
-                      <BookOpen size={18} />
-                      {t('books.readOnArchive')}
-                    </a>
-                  )}
-
-                  {/* View on Open Library */}
-                  <a
-                    href={`https://openlibrary.org/works/${id}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="book-detail__external-link"
+                <>
+                  <Button
+                    variant={isSaved ? 'secondary' : 'primary'}
+                    onClick={handleSaveToggle}
+                    loading={saveBook.isPending || removeBook.isPending}
                   >
-                    <ExternalLink size={18} />
-                    {t('books.viewOnOpenLibrary')}
-                  </a>
-                </div>
+                    <Heart size={18} fill={isSaved ? 'currentColor' : 'none'} />
+                    {isSaved ? t('books.saved') : t('books.save')}
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    onClick={() => setShowPlaylistModal(true)}
+                  >
+                    <Music size={18} />
+                    Add to Playlist
+                  </Button>
+                </>
               )}
+
+              {/* External links for Open Library */}
+              <div className="book-detail__external-links">
+                <a
+                  href={`https://openlibrary.org/works/${id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="book-detail__external-link"
+                >
+                  <ExternalLink size={18} />
+                  {t('books.viewOnOpenLibrary') || 'View on Open Library'}
+                </a>
+              </div>
             </div>
+
+            {/* Add to Playlist Modal */}
+            {showPlaylistModal && (
+              <div className="book-detail__modal-overlay" onClick={() => setShowPlaylistModal(false)}>
+                <div className="book-detail__modal-content" onClick={(e) => e.stopPropagation()}>
+                  <AddToPlaylist
+                    openLibraryId={id}
+                    onClose={() => setShowPlaylistModal(false)}
+                  />
+                </div>
+              </div>
+            )}
 
             {book.isbn && (
               <p className="book-detail__isbn">
@@ -197,15 +187,17 @@ const BookDetail = () => {
 
             {book.publisher && (
               <p className="book-detail__publisher">
-                <strong>Publisher:</strong> {book.publisher}
+                <strong>Publisher:</strong> {Array.isArray(book.publisher) ? book.publisher[0] : book.publisher}
               </p>
             )}
           </div>
         </div>
+
+        {/* Reviews Section */}
+        <ReviewSection openLibraryId={id} />
       </div>
     </div>
   );
 };
 
 export default BookDetail;
-

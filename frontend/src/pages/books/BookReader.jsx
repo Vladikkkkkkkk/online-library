@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Document, Page, pdfjs } from 'react-pdf';
@@ -13,17 +13,22 @@ import {
 } from 'lucide-react';
 import { useBook } from '../../hooks';
 import { Button, Loader } from '../../components/common';
+import { getApiUrl } from '../../utils/apiUrl';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
 import './BookReader.css';
 
-// Set up PDF.js worker
-pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
+// Set up PDF.js worker - use unpkg CDN (more reliable)
+// Note: Using .mjs extension as newer versions of pdfjs-dist use ES modules
+if (typeof window !== 'undefined') {
+  pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
+}
 
 const BookReader = () => {
   const { id } = useParams();
   const [searchParams] = useSearchParams();
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const source = searchParams.get('source') || 'local';
 
   const { data: bookData, isLoading } = useBook(id, source);
@@ -35,28 +40,27 @@ const BookReader = () => {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [error, setError] = useState(null);
 
-  // Get PDF URL - use proxy endpoint to avoid CORS issues
-  // For local books, use direct file URL or proxy
-  // For Open Library books, always use proxy endpoint
-  const pdfUrl = (() => {
-    if (!book) return null;
-    
-    // Local books - use proxy endpoint for consistency
-    if (book.fileUrl && source === 'local') {
-      return `${import.meta.env.VITE_API_URL}/books/${id}/read?source=local`;
-    }
-    
-    // Open Library books - use proxy endpoint
+  // Redirect if trying to read Open Library book
+  useEffect(() => {
     if (source === 'openlibrary') {
-      const pdfLink = book.downloadLinks?.find(link => link.format === 'PDF');
-      if (pdfLink) {
-        // Use proxy endpoint to avoid CORS
-        return `${import.meta.env.VITE_API_URL}/books/${id}/read?source=openlibrary`;
-      }
+      navigate(`/books/${id}?source=openlibrary`, { replace: true });
+    }
+  }, [source, id, navigate]);
+
+  // Get PDF URL - only for local books (useMemo to recalculate when book loads)
+  const pdfUrl = useMemo(() => {
+    if (!book || source !== 'local') return null;
+    
+    // Only local books with fileUrl can be read
+    if (book.fileUrl) {
+      // Use endpoint for reading (better control over headers and CORS)
+      const apiUrl = getApiUrl();
+      // Add source=local query parameter to ensure correct handling
+      return `${apiUrl}/books/${id}/read?source=local`;
     }
     
     return null;
-  })();
+  }, [book, source, id]);
 
   useEffect(() => {
     // Try to restore reading progress from localStorage
@@ -77,6 +81,32 @@ const BookReader = () => {
       }));
     }
   }, [pageNumber, numPages, id]);
+
+  // Define toggleFullscreen before using it
+  const toggleFullscreen = useCallback(() => {
+    if (!document.fullscreenElement) {
+      const element = document.documentElement;
+      if (element.requestFullscreen) {
+        element.requestFullscreen();
+      } else if (element.webkitRequestFullscreen) {
+        element.webkitRequestFullscreen();
+      } else if (element.mozRequestFullScreen) {
+        element.mozRequestFullScreen();
+      } else if (element.msRequestFullscreen) {
+        element.msRequestFullscreen();
+      }
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      } else if (document.webkitExitFullscreen) {
+        document.webkitExitFullscreen();
+      } else if (document.mozCancelFullScreen) {
+        document.mozCancelFullScreen();
+      } else if (document.msExitFullscreen) {
+        document.msExitFullscreen();
+      }
+    }
+  }, []);
 
   // Handle fullscreen changes
   useEffect(() => {
@@ -135,7 +165,7 @@ const BookReader = () => {
 
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [numPages]);
+  }, [numPages, toggleFullscreen]);
 
   const onDocumentLoadSuccess = ({ numPages }) => {
     setNumPages(numPages);
@@ -144,7 +174,13 @@ const BookReader = () => {
 
   const onDocumentLoadError = (error) => {
     console.error('PDF load error:', error);
-    setError(t('reader.pdfError'));
+    console.error('PDF URL:', pdfUrl);
+    console.error('Error details:', {
+      message: error.message,
+      name: error.name,
+      stack: error.stack,
+    });
+    setError(error.message || t('reader.pdfError') || 'Failed to load PDF');
   };
 
   const goToPrevPage = () => {
@@ -161,31 +197,6 @@ const BookReader = () => {
 
   const handleZoomOut = () => {
     setScale((prev) => Math.max(0.5, prev - 0.25));
-  };
-
-  const toggleFullscreen = () => {
-    if (!document.fullscreenElement) {
-      const element = document.documentElement;
-      if (element.requestFullscreen) {
-        element.requestFullscreen();
-      } else if (element.webkitRequestFullscreen) {
-        element.webkitRequestFullscreen();
-      } else if (element.mozRequestFullScreen) {
-        element.mozRequestFullScreen();
-      } else if (element.msRequestFullscreen) {
-        element.msRequestFullscreen();
-      }
-    } else {
-      if (document.exitFullscreen) {
-        document.exitFullscreen();
-      } else if (document.webkitExitFullscreen) {
-        document.webkitExitFullscreen();
-      } else if (document.mozCancelFullScreen) {
-        document.mozCancelFullScreen();
-      } else if (document.msExitFullscreen) {
-        document.msExitFullscreen();
-      }
-    }
   };
 
 
@@ -217,7 +228,7 @@ const BookReader = () => {
       {/* Header */}
       <header className="book-reader__header">
         <div className="book-reader__header-left">
-          <Link to={`/books/${id}${source === 'openlibrary' ? '?source=openlibrary' : ''}`}>
+          <Link to={`/books/${id}`}>
             <Button variant="ghost" size="sm">
               <ArrowLeft size={18} />
               {t('reader.back')}
@@ -263,9 +274,21 @@ const BookReader = () => {
                 </div>
               }
               options={{
-                cMapUrl: `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/cmaps/`,
+                cMapUrl: `https://unpkg.com/pdfjs-dist@${pdfjs.version}/cmaps/`,
                 cMapPacked: true,
+                httpHeaders: {
+                  'Accept': 'application/pdf',
+                },
+                withCredentials: false,
               }}
+              error={
+                <div className="book-reader__error-message">
+                  <p>{error || t('reader.pdfError') || 'Failed to load PDF'}</p>
+                  <Button onClick={() => window.location.reload()}>
+                    Reload Page
+                  </Button>
+                </div>
+              }
             >
               <Page
                 pageNumber={pageNumber}

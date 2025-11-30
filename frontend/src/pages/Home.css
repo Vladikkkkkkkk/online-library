@@ -111,11 +111,6 @@
   transition: transform 0.2s, box-shadow 0.2s;
 }
 
-.feature:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-lg);
-}
-
 .feature__icon {
   display: inline-flex;
   align-items: center;
@@ -320,4 +315,3 @@
     font-size: 1.75rem;
   }
 }
-

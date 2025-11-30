@@ -14,7 +14,7 @@ router.get('/stats', adminController.getDashboardStats);
 router.get('/users', adminController.getUsers);
 router.get('/users/:id', adminController.getUserById);
 router.put('/users/:id/role', adminController.updateUserRole);
-router.delete('/users/:id', adminController.deleteUser);
+router.put('/users/:id/block', adminController.toggleUserBlock);
 
 // Author management
 router.get('/authors', adminController.getAuthors);

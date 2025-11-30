@@ -3,6 +3,7 @@ const asyncHandler = require('../utils/asyncHandler');
 
 /**
  * User Library Controller - handles user's personal library routes
+ * Now works only with Open Library books
  */
 
 /**
@@ -26,14 +27,13 @@ const getSavedBooks = asyncHandler(async (req, res) => {
 
 /**
  * @desc    Save book to library
- * @route   POST /api/library/:bookId
+ * @route   POST /api/library/:openLibraryId
  * @access  Private
  */
 const saveBook = asyncHandler(async (req, res) => {
-  const { bookId } = req.params;
-  const { source = 'local' } = req.body;
+  const { openLibraryId } = req.params;
 
-  const result = await userLibraryService.saveBook(req.user.id, bookId, source);
+  const result = await userLibraryService.saveBook(req.user.id, openLibraryId);
 
   res.status(201).json({
     success: true,
@@ -44,14 +44,13 @@ const saveBook = asyncHandler(async (req, res) => {
 
 /**
  * @desc    Remove book from library
- * @route   DELETE /api/library/:bookId
+ * @route   DELETE /api/library/:openLibraryId
  * @access  Private
  */
 const removeBook = asyncHandler(async (req, res) => {
-  const { bookId } = req.params;
-  const { source = 'local' } = req.query;
+  const { openLibraryId } = req.params;
 
-  await userLibraryService.removeBook(req.user.id, bookId, source);
+  await userLibraryService.removeBook(req.user.id, openLibraryId);
 
   res.json({
     success: true,
@@ -61,37 +60,17 @@ const removeBook = asyncHandler(async (req, res) => {
 
 /**
  * @desc    Check if book is saved
- * @route   GET /api/library/:bookId/status
+ * @route   GET /api/library/:openLibraryId/status
  * @access  Private
  */
 const checkBookStatus = asyncHandler(async (req, res) => {
-  const { bookId } = req.params;
-  const { source = 'local' } = req.query;
+  const { openLibraryId } = req.params;
 
-  const isSaved = await userLibraryService.isBookSaved(req.user.id, bookId, source);
+  const isSaved = await userLibraryService.isBookSaved(req.user.id, openLibraryId);
 
   res.json({
     success: true,
     data: { isSaved },
-  });
-});
-
-/**
- * @desc    Get user's download history
- * @route   GET /api/library/downloads
- * @access  Private
- */
-const getDownloadHistory = asyncHandler(async (req, res) => {
-  const { page, limit } = req.query;
-
-  const result = await userLibraryService.getDownloadHistory(req.user.id, {
-    page: parseInt(page, 10) || 1,
-    limit: parseInt(limit, 10) || 10,
-  });
-
-  res.json({
-    success: true,
-    ...result,
   });
 });
 
@@ -114,7 +93,5 @@ module.exports = {
   saveBook,
   removeBook,
   checkBookStatus,
-  getDownloadHistory,
   getUserStats,
 };
-

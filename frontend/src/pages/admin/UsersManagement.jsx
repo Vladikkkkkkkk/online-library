@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Search, User, Shield, Trash2 } from 'lucide-react';
+import { Search, User, Shield, Lock, Unlock } from 'lucide-react';
 import { adminApi } from '../../api/admin';
 import { Button, Loader } from '../../components/common';
 import toast from 'react-hot-toast';
@@ -31,14 +31,14 @@ const UsersManagement = () => {
     },
   });
 
-  const deleteUserMutation = useMutation({
-    mutationFn: (userId) => adminApi.deleteUser(userId),
-    onSuccess: () => {
+  const toggleBlockMutation = useMutation({
+    mutationFn: ({ userId, isBlocked }) => adminApi.toggleUserBlock(userId, isBlocked),
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries(['admin', 'users']);
-      toast.success('Користувача видалено');
+      toast.success(variables.isBlocked ? 'Користувача заблоковано' : 'Користувача розблоковано');
     },
     onError: () => {
-      toast.error('Помилка видалення користувача');
+      toast.error('Помилка зміни статусу блокування');
     },
   });
 
@@ -52,9 +52,10 @@ const UsersManagement = () => {
     }
   };
 
-  const handleDelete = (userId, userName) => {
-    if (window.confirm(`Видалити користувача "${userName}"? Цю дію неможливо скасувати.`)) {
-      deleteUserMutation.mutate(userId);
+  const handleToggleBlock = (userId, userName, isCurrentlyBlocked) => {
+    const action = isCurrentlyBlocked ? 'розблокувати' : 'заблокувати';
+    if (window.confirm(`${action.charAt(0).toUpperCase() + action.slice(1)} користувача "${userName}"?`)) {
+      toggleBlockMutation.mutate({ userId, isBlocked: !isCurrentlyBlocked });
     }
   };
 
@@ -117,6 +118,7 @@ const UsersManagement = () => {
                   <th>Користувач</th>
                   <th>Email</th>
                   <th>Роль</th>
+                  <th>Статус</th>
                   <th>Зареєстровано</th>
                   <th>Збережено книг</th>
                   <th>Дії</th>
@@ -152,6 +154,11 @@ const UsersManagement = () => {
                         {user.role === 'ADMIN' ? 'Адмін' : 'Користувач'}
                       </span>
                     </td>
+                    <td>
+                      <span className={`admin-user-role ${user.isBlocked ? 'admin-user-role--blocked' : 'admin-user-role--active'}`}>
+                        {user.isBlocked ? 'Заблоковано' : 'Активний'}
+                      </span>
+                    </td>
                     <td>{formatDate(user.createdAt)}</td>
                     <td>{user._count?.savedBooks || 0}</td>
                     <td>
@@ -160,15 +167,17 @@ const UsersManagement = () => {
                           className="admin-table__action"
                           title={user.role === 'ADMIN' ? 'Зняти права адміна' : 'Зробити адміном'}
                           onClick={() => handleRoleChange(user.id, user.role, `${user.firstName} ${user.lastName}`)}
+                          disabled={toggleBlockMutation.isPending}
                         >
                           <Shield size={18} />
                         </button>
                         <button
-                          className="admin-table__action admin-table__action--delete"
-                          title="Видалити"
-                          onClick={() => handleDelete(user.id, `${user.firstName} ${user.lastName}`)}
+                          className={`admin-table__action ${user.isBlocked ? 'admin-table__action--unblock' : 'admin-table__action--block'}`}
+                          title={user.isBlocked ? 'Розблокувати' : 'Заблокувати'}
+                          onClick={() => handleToggleBlock(user.id, `${user.firstName} ${user.lastName}`, user.isBlocked)}
+                          disabled={toggleBlockMutation.isPending || user.role === 'ADMIN'}
                         >
-                          <Trash2 size={18} />
+                          {user.isBlocked ? <Unlock size={18} /> : <Lock size={18} />}
                         </button>
                       </div>
                     </td>

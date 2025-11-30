@@ -1,6 +1,7 @@
 import axios from 'axios';
+import { getApiUrl } from '../utils/apiUrl';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+const API_BASE_URL = getApiUrl();
 
 // Create axios instance
 const apiClient = axios.create({
@@ -13,10 +14,17 @@ const apiClient = axios.create({
 // Request interceptor - add auth token
 apiClient.interceptors.request.use(
   (config) => {
-    const authData = localStorage.getItem('auth-storage');
-    const token = authData ? JSON.parse(authData)?.state?.token : null;
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    try {
+      const authData = localStorage.getItem('auth-storage');
+      if (authData) {
+        const parsed = JSON.parse(authData);
+        const token = parsed?.state?.token || null;
+        if (token) {
+          config.headers.Authorization = `Bearer ${token}`;
+        }
+      }
+    } catch (error) {
+      console.error('Error reading auth token:', error);
     }
     return config;
   },
@@ -33,9 +41,38 @@ apiClient.interceptors.response.use(
     
     // Handle 401 - Unauthorized
     if (error.response?.status === 401) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      window.location.href = '/login';
+      // Don't redirect during initialization - let the auth store handle it
+      const isInitializationRequest = error.config?.url?.includes('/auth/me');
+      
+      if (!isInitializationRequest) {
+        // Clear auth storage (zustand persist format)
+        try {
+          localStorage.removeItem('auth-storage');
+        } catch {
+          // Ignore errors
+        }
+        // Only redirect if not already on login/register page
+        const currentPath = window.location.pathname;
+        if (!currentPath.includes('/login') && !currentPath.includes('/register')) {
+          // Use navigate if available, otherwise redirect
+          window.location.href = '/login';
+        }
+      }
+    }
+    
+    // Handle 403 - Forbidden (blocked user)
+    if (error.response?.status === 403) {
+      // Clear auth storage for blocked users
+      try {
+        localStorage.removeItem('auth-storage');
+      } catch {
+        // Ignore errors
+      }
+      // Redirect to login page if not already there
+      const currentPath = window.location.pathname;
+      if (!currentPath.includes('/login') && !currentPath.includes('/register')) {
+        window.location.href = '/login';
+      }
     }
 
     return Promise.reject({ message, status: error.response?.status });

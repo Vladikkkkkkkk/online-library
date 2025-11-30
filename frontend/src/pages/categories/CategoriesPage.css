@@ -1,0 +1,129 @@
+.categories-page {
+  min-height: calc(100vh - 200px);
+  padding: 2rem 1.5rem;
+}
+
+.categories-page__container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.categories-page__header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.categories-page__header h1 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 0.5rem;
+}
+
+.categories-page__header p {
+  font-size: 1.125rem;
+  color: var(--color-text-muted);
+}
+
+.categories-page__loading {
+  display: flex;
+  justify-content: center;
+  padding: 4rem 0;
+}
+
+.categories-page__empty {
+  text-align: center;
+  padding: 4rem 2rem;
+}
+
+.categories-page__empty-icon {
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+.categories-page__empty h3 {
+  font-size: 1.25rem;
+  color: var(--color-text-muted);
+}
+
+/* Categories Grid - reuse styles from Home.css */
+.categories-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1.5rem;
+}
+
+.category-card {
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.category-card:hover {
+  border-color: var(--color-primary);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.category-card h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 0.25rem;
+}
+
+.category-card__uk {
+  display: block;
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+  margin-bottom: 0.5rem;
+}
+
+.category-card__count {
+  font-size: 0.8125rem;
+  color: var(--color-primary);
+  font-weight: 500;
+  margin-top: auto;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .categories-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .categories-page__header h1 {
+    font-size: 2rem;
+  }
+
+  .categories-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .categories-page {
+    padding: 1.5rem 1rem;
+  }
+
+  .categories-page__header {
+    margin-bottom: 2rem;
+  }
+
+  .categories-page__header h1 {
+    font-size: 1.75rem;
+  }
+
+  .categories-grid {
+    grid-template-columns: 1fr;
+  }
+}
+

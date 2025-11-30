@@ -19,10 +19,10 @@ app.use(cors(config.cors));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Static files for uploaded content
+// Static files for uploaded content (both at root and under /api)
 app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 
-// API routes
+// API routes (includes /api/uploads static files)
 app.use('/api', routes);
 
 // Root endpoint

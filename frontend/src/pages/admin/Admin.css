@@ -328,6 +328,21 @@
   color: var(--color-danger);
 }
 
+.admin-table__action--block:hover {
+  background: rgba(231, 76, 60, 0.1);
+  color: var(--color-danger);
+}
+
+.admin-table__action--unblock:hover {
+  background: rgba(39, 174, 96, 0.1);
+  color: var(--color-success);
+}
+
+.admin-table__action:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 /* Users Management */
 .admin-users {
   padding: 2rem 1.5rem;
@@ -365,6 +380,16 @@
 .admin-user-role--user {
   background: var(--color-primary-light);
   color: var(--color-primary);
+}
+
+.admin-user-role--blocked {
+  background: rgba(231, 76, 60, 0.1);
+  color: var(--color-danger);
+}
+
+.admin-user-role--active {
+  background: rgba(39, 174, 96, 0.1);
+  color: var(--color-success);
 }
 
 /* Pagination */
