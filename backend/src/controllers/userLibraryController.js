@@ -16,7 +16,7 @@ const getSavedBooks = asyncHandler(async (req, res) => {
 
   const result = await userLibraryService.getSavedBooks(req.user.id, {
     page: parseInt(page, 10) || 1,
-    limit: parseInt(limit, 10) || 10,
+    limit: parseInt(limit, 10) || 12,
   });
 
   res.json({

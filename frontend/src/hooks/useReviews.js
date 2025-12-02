@@ -13,12 +13,13 @@ export const useBookReviews = (openLibraryId, params) => {
 };
 
 // Get user's review for a book
-export const useUserReview = (openLibraryId) => {
+export const useUserReview = (openLibraryId, options = {}) => {
   return useQuery({
     queryKey: ['review', 'user', openLibraryId],
     queryFn: () => reviewsApi.getUserReview(openLibraryId),
-    enabled: !!openLibraryId,
+    enabled: !!openLibraryId && (options.enabled !== false),
     staleTime: 2 * 60 * 1000,
+    retry: false, // Don't retry on 401 errors
   });
 };
 

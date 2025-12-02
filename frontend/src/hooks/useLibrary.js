@@ -12,11 +12,12 @@ export const useSavedBooks = (params) => {
 };
 
 // Check if book is saved
-export const useBookStatus = (openLibraryId) => {
+export const useBookStatus = (openLibraryId, options = {}) => {
   return useQuery({
     queryKey: ['library', 'status', openLibraryId],
     queryFn: () => libraryApi.checkStatus(openLibraryId),
-    enabled: !!openLibraryId,
+    enabled: !!openLibraryId && (options.enabled !== false),
+    retry: false, // Don't retry on 401 errors
   });
 };
 
@@ -27,7 +28,8 @@ export const useSaveBook = () => {
   return useMutation({
     mutationFn: ({ openLibraryId }) => libraryApi.saveBook(openLibraryId),
     onSuccess: (_, { openLibraryId }) => {
-      queryClient.invalidateQueries(['library']);
+      // Invalidate all library queries to refresh the list
+      queryClient.invalidateQueries({ queryKey: ['library'] });
       queryClient.setQueryData(['library', 'status', openLibraryId], { success: true, data: { isSaved: true } });
       toast.success('Book saved to library!');
     },
@@ -44,7 +46,8 @@ export const useRemoveBook = () => {
   return useMutation({
     mutationFn: ({ openLibraryId }) => libraryApi.removeBook(openLibraryId),
     onSuccess: (_, { openLibraryId }) => {
-      queryClient.invalidateQueries(['library']);
+      // Invalidate all library queries to refresh the list
+      queryClient.invalidateQueries({ queryKey: ['library'] });
       queryClient.setQueryData(['library', 'status', openLibraryId], { success: true, data: { isSaved: false } });
       toast.success('Book removed from library!');
     },

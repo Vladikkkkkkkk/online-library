@@ -84,6 +84,24 @@
   margin-bottom: 1.5rem;
 }
 
+.book-detail__authors-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.book-detail__author-link {
+  color: var(--color-primary);
+  text-decoration: none;
+  transition: color 0.2s, text-decoration 0.2s;
+  cursor: pointer;
+}
+
+.book-detail__author-link:hover {
+  color: var(--color-primary-dark);
+  text-decoration: underline;
+}
+
 .book-detail__meta {
   display: flex;
   flex-wrap: wrap;
@@ -214,4 +232,3 @@
     flex-direction: column;
   }
 }
-

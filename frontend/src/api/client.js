@@ -44,20 +44,26 @@ apiClient.interceptors.response.use(
       // Don't redirect during initialization - let the auth store handle it
       const isInitializationRequest = error.config?.url?.includes('/auth/me');
       
-      if (!isInitializationRequest) {
+      // Don't redirect for public pages (books, categories) - they should be accessible without auth
+      const currentPath = window.location.pathname;
+      const isPublicPage = currentPath.startsWith('/books') || 
+                          currentPath.startsWith('/categories') || 
+                          currentPath === '/' ||
+                          currentPath.includes('/login') || 
+                          currentPath.includes('/register');
+      
+      // Only redirect if not on public pages and not during initialization
+      if (!isInitializationRequest && !isPublicPage) {
         // Clear auth storage (zustand persist format)
         try {
           localStorage.removeItem('auth-storage');
         } catch {
           // Ignore errors
         }
-        // Only redirect if not already on login/register page
-        const currentPath = window.location.pathname;
-        if (!currentPath.includes('/login') && !currentPath.includes('/register')) {
-          // Use navigate if available, otherwise redirect
-          window.location.href = '/login';
-        }
+        // Redirect to login
+        window.location.href = '/login';
       }
+      // For public pages, just reject the promise without redirecting
     }
     
     // Handle 403 - Forbidden (blocked user)

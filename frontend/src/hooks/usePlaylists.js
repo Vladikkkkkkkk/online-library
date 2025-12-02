@@ -12,10 +12,10 @@ export const useUserPlaylists = (params) => {
 };
 
 // Get playlist by ID
-export const usePlaylist = (id) => {
+export const usePlaylist = (id, params = {}) => {
   return useQuery({
-    queryKey: ['playlist', id],
-    queryFn: () => playlistsApi.getById(id),
+    queryKey: ['playlist', id, params],
+    queryFn: () => playlistsApi.getById(id, params),
     enabled: !!id,
     staleTime: 2 * 60 * 1000,
   });

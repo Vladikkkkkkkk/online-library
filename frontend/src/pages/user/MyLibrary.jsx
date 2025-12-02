@@ -11,10 +11,14 @@ import './MyLibrary.css';
 const MyLibrary = () => {
   const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState('');
-  const { data: libraryData, isLoading } = useSavedBooks();
+  const [page, setPage] = useState(1);
+  const limit = 12;
+  const { data: libraryData, isLoading } = useSavedBooks({ page, limit });
   const removeBook = useRemoveBook();
 
   const savedBooks = libraryData?.data || [];
+  const pagination = libraryData?.pagination || {};
+  const totalBooks = pagination?.totalItems || 0;
 
   // Filter books by search query
   const filteredBooks = savedBooks.filter((item) => {
@@ -42,7 +46,7 @@ const MyLibrary = () => {
 
   // Transform saved books to match BookGrid format
   const booksForGrid = filteredBooks
-    .filter(item => item.book) // Filter out items without book data
+    .filter(item => item.book && item.book.title && item.book.title !== 'Book unavailable' && item.book.title !== 'Loading...')
     .map((item) => ({
       ...item.book,
       id: item.openLibraryId || item.book.id, // Use openLibraryId as primary ID
@@ -61,18 +65,23 @@ const MyLibrary = () => {
               {t('library.title')}
             </h1>
             <p className="my-library__subtitle">
-              {t('library.booksSaved', { count: savedBooks.length })}
+              {totalBooks > 0 
+                ? `${totalBooks} ${totalBooks === 1 ? 'книга' : totalBooks < 5 ? 'книги' : 'книг'} збережено`
+                : t('library.empty')}
             </p>
           </div>
 
-          {savedBooks.length > 0 && (
+          {totalBooks > 0 && (
             <div className="my-library__search">
               <Search size={18} className="my-library__search-icon" />
               <input
                 type="text"
                 placeholder={t('library.searchPlaceholder')}
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setPage(1); // Reset to first page when searching
+                }}
                 className="my-library__search-input"
               />
             </div>
@@ -84,7 +93,7 @@ const MyLibrary = () => {
           <div className="my-library__loading">
             <Loader size="lg" />
           </div>
-        ) : savedBooks.length === 0 ? (
+        ) : totalBooks === 0 ? (
           <div className="my-library__empty">
             <div className="my-library__empty-icon">
               <BookOpen size={64} />
@@ -105,28 +114,55 @@ const MyLibrary = () => {
             <Search size={48} />
             <h2>{t('library.noResults')}</h2>
             <p>{t('library.tryDifferentQuery')}</p>
-            <Button variant="secondary" onClick={() => setSearchQuery('')}>
+            <Button variant="secondary" onClick={() => {
+              setSearchQuery('');
+              setPage(1);
+            }}>
               {t('library.clearSearch')}
             </Button>
           </div>
         ) : (
-          <div className="my-library__content">
-            <BookGrid 
-              books={booksForGrid} 
-              showActions={true}
-              onRemove={handleRemoveBook}
-              showSavedBadge={true}
-            />
-          </div>
+          <>
+            <div className="my-library__content">
+              <BookGrid 
+                books={booksForGrid} 
+                showActions={true}
+                onRemove={handleRemoveBook}
+                showSavedBadge={true}
+              />
+            </div>
+
+            {/* Pagination */}
+            {!searchQuery && totalBooks > limit && (
+              <div className="my-library__pagination">
+                <Button
+                  variant="secondary"
+                  disabled={page === 1}
+                  onClick={() => setPage((p) => p - 1)}
+                >
+                  {t('common.previous')}
+                </Button>
+                <span className="my-library__page-info">
+                  {t('common.page')} {page} {t('common.of')} {Math.ceil(totalBooks / limit)}
+                </span>
+                <Button
+                  variant="secondary"
+                  disabled={savedBooks.length < limit || page * limit >= totalBooks}
+                  onClick={() => setPage((p) => p + 1)}
+                >
+                  {t('common.next')}
+                </Button>
+              </div>
+            )}
+          </>
         )}
 
         {/* Info Section */}
-        {savedBooks.length > 0 && (
+        {totalBooks > 0 && (
           <div className="my-library__info">
             <h3>💡 Підказка</h3>
             <p>
-              Натисніть на книгу, щоб переглянути деталі, або використовуйте кнопку завантаження,
-              щоб скачати книгу у PDF форматі.
+              Натисніть на книгу, щоб переглянути деталі.
             </p>
           </div>
         )}

@@ -1,6 +1,7 @@
+import { useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, Music, Plus, Trash2, Edit2 } from 'lucide-react';
+import { ArrowLeft, Bookmark, Plus, Trash2, Edit2 } from 'lucide-react';
 import { usePlaylist, useAddBookToPlaylist, useRemoveBookFromPlaylist, useUpdatePlaylist, useDeletePlaylist } from '../../hooks/usePlaylists';
 import { BookGrid } from '../../components/books';
 import { Button, Loader } from '../../components/common';
@@ -12,7 +13,9 @@ const PlaylistDetail = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { user } = useAuthStore();
-  const { data, isLoading } = usePlaylist(id);
+  const [page, setPage] = useState(1);
+  const limit = 12;
+  const { data, isLoading } = usePlaylist(id, { page, limit });
   const removeBook = useRemoveBookFromPlaylist();
   const updatePlaylist = useUpdatePlaylist();
   const deletePlaylist = useDeletePlaylist();
@@ -57,11 +60,16 @@ const PlaylistDetail = () => {
     );
   }
 
-  const books = playlist.books?.map((pb) => ({
-    ...pb.book,
-    id: pb.book.id,
-    openLibraryId: pb.openLibraryId,
-  })) || [];
+  const books = playlist.books
+    ?.filter(pb => pb.book && pb.book.title && pb.book.title !== 'Book not available')
+    .map((pb) => ({
+      ...pb.book,
+      id: pb.openLibraryId || pb.book?.id,
+      openLibraryId: pb.openLibraryId || pb.book?.id,
+    })) || [];
+  
+  const pagination = playlist?.pagination || {};
+  const totalBooks = pagination?.totalItems || books.length;
 
   return (
     <div className="playlist-detail">
@@ -73,7 +81,7 @@ const PlaylistDetail = () => {
 
         <div className="playlist-detail__header">
           <div className="playlist-detail__icon">
-            <Music size={48} />
+            <Bookmark size={48} />
           </div>
           <div className="playlist-detail__info">
             <h1 className="playlist-detail__name">{playlist.name}</h1>
@@ -81,7 +89,7 @@ const PlaylistDetail = () => {
               <p className="playlist-detail__description">{playlist.description}</p>
             )}
             <div className="playlist-detail__meta">
-              <span>{books.length} {books.length === 1 ? 'book' : 'books'}</span>
+              <span>{totalBooks} {totalBooks === 1 ? 'book' : 'books'}</span>
               {playlist.isPublic && (
                 <span className="playlist-detail__badge">Public</span>
               )}
@@ -102,18 +110,43 @@ const PlaylistDetail = () => {
 
         {books.length === 0 ? (
           <div className="playlist-detail__empty">
-            <Music size={64} />
-            <h2>This playlist is empty</h2>
-            <p>Add books to get started!</p>
+            <Bookmark size={64} />
+            <h2>Цей список порожній</h2>
+            <p>Додайте книги, щоб почати!</p>
           </div>
         ) : (
-          <div className="playlist-detail__books">
-            <BookGrid
-              books={books}
-              onRemove={isOwner ? handleRemoveBook : undefined}
-              showActions={isOwner}
-            />
-          </div>
+          <>
+            <div className="playlist-detail__books">
+              <BookGrid
+                books={books}
+                onRemove={isOwner ? handleRemoveBook : undefined}
+                showActions={isOwner}
+              />
+            </div>
+            
+            {/* Pagination */}
+            {totalBooks > limit && (
+              <div className="playlist-detail__pagination">
+                <Button
+                  variant="secondary"
+                  disabled={page === 1}
+                  onClick={() => setPage((p) => p - 1)}
+                >
+                  {t('common.previous')}
+                </Button>
+                <span className="playlist-detail__page-info">
+                  {t('common.page')} {page} {t('common.of')} {pagination.totalPages || Math.ceil(totalBooks / limit)}
+                </span>
+                <Button
+                  variant="secondary"
+                  disabled={books.length < limit || page * limit >= totalBooks}
+                  onClick={() => setPage((p) => p + 1)}
+                >
+                  {t('common.next')}
+                </Button>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>

@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { BookOpen, Github, Mail, Heart } from 'lucide-react';
+import { BookOpen, Heart } from 'lucide-react';
 import './Footer.css';
 
 const Footer = () => {
@@ -33,12 +33,6 @@ const Footer = () => {
               <Link to="/library">My Library</Link>
             </div>
 
-            <div className="footer__links-group">
-              <h4>Support</h4>
-              <Link to="/about">About</Link>
-              <Link to="/contact">Contact</Link>
-              <Link to="/faq">FAQ</Link>
-            </div>
           </div>
         </div>
 
@@ -46,14 +40,6 @@ const Footer = () => {
           <p className="footer__copyright">
             © {currentYear} Online Library. Made with <Heart size={14} className="footer__heart" /> for readers.
           </p>
-          <div className="footer__social">
-            <a href="https://github.com/Vladikkkkkkkk" target="_blank" rel="noopener noreferrer" aria-label="GitHub">
-              <Github size={20} />
-            </a>
-            <a href="mailto:khmilvl@gmail.com" aria-label="Email">
-              <Mail size={20} />
-            </a>
-          </div>
         </div>
       </div>
     </footer>

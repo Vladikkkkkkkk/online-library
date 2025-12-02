@@ -75,7 +75,11 @@
   width: 64px;
   height: 64px;
   border-radius: 12px;
-  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+  background: linear-gradient(
+    135deg,
+    var(--color-primary),
+    var(--color-primary-dark)
+  );
   display: flex;
   align-items: center;
   justify-content: center;
@@ -215,4 +219,3 @@
     flex-direction: column;
   }
 }
-

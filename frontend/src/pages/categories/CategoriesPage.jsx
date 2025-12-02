@@ -16,7 +16,6 @@ const CategoriesPage = () => {
       <div className="categories-page__container">
         <header className="categories-page__header">
           <h1>{t('home.categories')}</h1>
-          <p>{t('categories.description') || 'Browse books by category'}</p>
         </header>
 
         {isLoading ? (

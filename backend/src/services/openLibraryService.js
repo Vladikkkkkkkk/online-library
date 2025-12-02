@@ -35,7 +35,7 @@ class OpenLibraryService {
       const params = new URLSearchParams({
         page,
         limit,
-        fields: 'key,title,author_name,first_publish_year,isbn,cover_i,subject,language,number_of_pages_median,publisher,has_fulltext,ia,ratings_count,ratings_average',
+        fields: 'key,title,author_name,first_publish_year,isbn,cover_i,cover_id,subject,language,language_key,number_of_pages_median,publisher,has_fulltext,ia,ratings_count,ratings_average',
       });
 
       // Build search query using Open Library syntax
@@ -73,9 +73,11 @@ class OpenLibraryService {
       }
       if (language && language.trim()) {
         // Open Library uses language codes (eng, ukr, etc.)
-        // The language field shows ALL languages of editions, so we need to filter more strictly
-        // We'll use language filter and then post-filter results to ensure exact match
+        // Use language field for initial filtering
+        // Post-filtering will ensure exact matches
         const langCode = this.normalizeLanguageCode(language.trim());
+        // Use language field (standard in search API)
+        // Post-filtering will handle normalization and exact matching
         searchParts.push(`language:${langCode}`);
       }
 
@@ -106,20 +108,32 @@ class OpenLibraryService {
       let books = response.data.docs.map(this.transformBookData.bind(this));
       
       // Post-filter by language if specified (to ensure exact language match)
-      // Open Library's language field includes ALL languages of editions, not just the primary one
-      // We need to check if our target language is the PRIMARY language (first in array) or at least one of them
+      // Open Library's language field can contain multiple formats:
+      // - Array of language codes: ["eng", "ukr"]
+      // - Array of language keys: ["/languages/eng", "/languages/ukr"]
+      // We need to normalize and check both formats
       if (language && language.trim()) {
         const langCode = this.normalizeLanguageCode(language.trim());
+        const langKey = `/languages/${langCode}`;
         const originalCount = books.length;
         books = books.filter(book => {
-          // Check if the book's language array includes our target language
-          if (book.languages && Array.isArray(book.languages) && book.languages.length > 0) {
-            // For stricter matching, check if it's the primary language (first one)
-            // Or at least one of the languages
-            return book.languages.includes(langCode);
+          if (!book.languages || !Array.isArray(book.languages) || book.languages.length === 0) {
+            return false; // Exclude books without language info
           }
-          // If no language info, exclude it for strict filtering
-          return false;
+          
+          // Check if any language matches (supporting both formats)
+          return book.languages.some(lang => {
+            // Normalize language value
+            const normalizedLang = typeof lang === 'string' 
+              ? lang.toLowerCase().replace(/^\/languages\//, '')
+              : String(lang).toLowerCase();
+            
+            // Check if it matches our target language code
+            return normalizedLang === langCode || 
+                   normalizedLang === langKey.toLowerCase().replace(/^\/languages\//, '') ||
+                   lang === langKey ||
+                   lang === langCode;
+          });
         });
         
         // Log filtering info for debugging
@@ -161,13 +175,34 @@ class OpenLibraryService {
       'ar': 'ara',
     };
     
+    // Remove /languages/ prefix if present
+    let normalized = lang.toLowerCase().replace(/^\/languages\//, '');
+    
     // If already 3-letter code, return as is
-    if (lang.length === 3) {
-      return lang.toLowerCase();
+    if (normalized.length === 3) {
+      return normalized;
     }
     
     // Map 2-letter codes to 3-letter
-    return langMap[lang.toLowerCase()] || lang.toLowerCase();
+    return langMap[normalized] || normalized;
+  }
+
+  /**
+   * Normalize languages array from Open Library
+   * Handles both formats: ["eng", "ukr"] and ["/languages/eng", "/languages/ukr"]
+   */
+  normalizeLanguages(languages) {
+    if (!Array.isArray(languages)) {
+      return [];
+    }
+    
+    return languages.map(lang => {
+      if (typeof lang === 'string') {
+        // Remove /languages/ prefix and return just the code
+        return lang.replace(/^\/languages\//, '').toLowerCase();
+      }
+      return String(lang).toLowerCase();
+    });
   }
 
   /**
@@ -177,20 +212,22 @@ class OpenLibraryService {
    */
   async getBookById(olid) {
     try {
-      // First, try to get ratings from search API (works endpoint doesn't include ratings)
+      // First, try to get ratings and cover from search API (works endpoint doesn't include ratings)
       let openLibraryRating = null;
       let openLibraryRatingCount = 0;
+      let searchCoverId = null; // Fallback cover ID from search API
       try {
         const searchResponse = await axios.get(
-          `${this.baseUrl}/search.json?q=key:/works/${olid}&fields=key,ratings_average,ratings_count&limit=1`
+          `${this.baseUrl}/search.json?q=key:/works/${olid}&fields=key,ratings_average,ratings_count,cover_i,isbn&limit=1`
         );
         if (searchResponse.data.docs && searchResponse.data.docs.length > 0) {
           const searchBook = searchResponse.data.docs[0];
           openLibraryRating = searchBook.ratings_average ? Number(searchBook.ratings_average) : null;
           openLibraryRatingCount = searchBook.ratings_count || 0;
+          searchCoverId = searchBook.cover_i || null;
         }
       } catch (searchError) {
-        console.warn(`Could not fetch ratings for ${olid} from search API:`, searchError.message);
+        console.warn(`Could not fetch ratings/cover for ${olid} from search API:`, searchError.message);
       }
 
       const response = await axios.get(`${this.baseUrl}/works/${olid}.json`);
@@ -218,7 +255,7 @@ class OpenLibraryService {
       const editionsResponse = await axios.get(`${this.baseUrl}/works/${olid}/editions.json?limit=20`);
       const editions = editionsResponse.data.entries || [];
 
-      const bookData = this.transformDetailedBookData(book, authors, editions);
+      const bookData = this.transformDetailedBookData(book, authors, editions, searchCoverId);
       // Override with ratings from search API if available
       bookData.openLibraryRating = openLibraryRating;
       bookData.openLibraryRatingCount = openLibraryRatingCount;
@@ -297,46 +334,63 @@ class OpenLibraryService {
   async getTrendingBooks(type = 'daily', limit = 10) {
     try {
       const response = await axios.get(
-        `${this.baseUrl}/trending/${type}.json?limit=${limit}`
+        `${this.baseUrl}/trending/${type}.json?limit=${limit}`,
+        { timeout: 8000 }
       );
       
-      // Get ratings for each trending book using search API
-      const booksWithRatings = await Promise.all(
-        response.data.works.map(async (work) => {
-          const openLibraryId = work.key?.replace('/works/', '');
-          let openLibraryRating = null;
-          let openLibraryRatingCount = 0;
+      const works = response.data.works || [];
+      if (works.length === 0) {
+        return [];
+      }
+      
+      // Extract all work keys for batch rating fetch
+      const workKeys = works.map(work => work.key).filter(Boolean);
+      
+      // Batch fetch ratings for all books at once
+      let ratingsMap = {};
+      if (workKeys.length > 0) {
+        try {
+          const keys = workKeys.map(key => `key:${key}`).join(' OR ');
+          const batchRatingResponse = await axios.get(
+            `${this.baseUrl}/search.json?q=(${keys})&fields=key,ratings_average,ratings_count&limit=${workKeys.length}`,
+            { timeout: 10000 }
+          );
           
-          // Try to get ratings from search API
-          try {
-            const searchResponse = await axios.get(
-              `${this.baseUrl}/search.json?q=key:${work.key}&fields=key,ratings_average,ratings_count&limit=1`
-            );
-            if (searchResponse.data.docs && searchResponse.data.docs.length > 0) {
-              const searchBook = searchResponse.data.docs[0];
-              openLibraryRating = searchBook.ratings_average ? Number(searchBook.ratings_average) : null;
-              openLibraryRatingCount = searchBook.ratings_count || 0;
-            }
-          } catch (searchError) {
-            // If search fails, ratings will remain null
-            console.warn(`Could not fetch ratings for ${openLibraryId}:`, searchError.message);
+          if (batchRatingResponse.data.docs) {
+            batchRatingResponse.data.docs.forEach(doc => {
+              const key = doc.key;
+              if (key) {
+                ratingsMap[key] = {
+                  rating: doc.ratings_average ? Number(doc.ratings_average) : null,
+                  count: doc.ratings_count || 0,
+                };
+              }
+            });
           }
-          
-          return {
-            openLibraryId,
-            title: work.title,
-            authors: work.author_name || [],
-            coverId: work.cover_i,
-            coverUrl: work.cover_i 
-              ? `${this.coversUrl}/b/id/${work.cover_i}-M.jpg`
-              : null,
-            firstPublishYear: work.first_publish_year,
-            publishYear: work.first_publish_year,
-            openLibraryRating,
-            openLibraryRatingCount,
-          };
-        })
-      );
+        } catch (batchError) {
+          console.warn('Batch ratings fetch failed for trending books:', batchError.message);
+        }
+      }
+      
+      // Map works to books with ratings
+      const booksWithRatings = works.map((work) => {
+        const openLibraryId = work.key?.replace('/works/', '');
+        const ratings = ratingsMap[work.key] || { rating: null, count: 0 };
+        
+        return {
+          openLibraryId,
+          title: work.title,
+          authors: work.author_name || [],
+          coverId: work.cover_i,
+          coverUrl: work.cover_i 
+            ? `${this.coversUrl}/b/id/${work.cover_i}-M.jpg`
+            : null,
+          firstPublishYear: work.first_publish_year,
+          publishYear: work.first_publish_year,
+          openLibraryRating: ratings.rating,
+          openLibraryRatingCount: ratings.count,
+        };
+      });
       
       return booksWithRatings;
     } catch (error) {
@@ -385,18 +439,27 @@ class OpenLibraryService {
    * Transform book data from search results
    */
   transformBookData(book) {
+    // Get cover URL - try cover_i first, then cover_id, then ISBN as fallback
+    let coverUrl = null;
+    let coverId = book.cover_i || book.cover_id;
+    
+    if (coverId) {
+      coverUrl = `${this.coversUrl}/b/id/${coverId}-M.jpg`;
+    } else if (book.isbn?.[0]) {
+      // Try ISBN-based cover as fallback
+      coverUrl = `${this.coversUrl}/b/isbn/${book.isbn[0]}-M.jpg`;
+    }
+    
     return {
       openLibraryId: book.key?.replace('/works/', ''),
       title: book.title,
       authors: book.author_name || [],
       publishYear: book.first_publish_year,
       isbn: book.isbn?.[0],
-      coverId: book.cover_i,
-      coverUrl: book.cover_i 
-        ? `${this.coversUrl}/b/id/${book.cover_i}-M.jpg`
-        : null,
+      coverId,
+      coverUrl,
       subjects: book.subject?.slice(0, 5) || [],
-      languages: book.language || [], // Array of language codes
+      languages: this.normalizeLanguages(book.language || book.language_key || []), // Array of language codes
       pageCount: book.number_of_pages_median,
       publishers: book.publisher?.slice(0, 3) || [],
       hasFulltext: book.has_fulltext || false,
@@ -409,9 +472,34 @@ class OpenLibraryService {
 
   /**
    * Transform detailed book data
+   * @param {object} book - Book data from works API
+   * @param {array} authors - Author data
+   * @param {array} editions - Editions data
+   * @param {number} searchCoverId - Cover ID from search API (fallback)
    */
-  transformDetailedBookData(book, authors, editions) {
-    const coverId = book.covers?.[0];
+  transformDetailedBookData(book, authors, editions, searchCoverId = null) {
+    // Try multiple sources for cover ID:
+    // 1. covers[0] from works API (most reliable for detailed view)
+    // 2. cover_i from search API (fallback if works API doesn't have it)
+    // 3. Try to get from first edition if available
+    let coverId = book.covers?.[0] || searchCoverId;
+    
+    // If still no cover, try to get from first edition
+    if (!coverId && editions.length > 0) {
+      const firstEdition = editions[0];
+      coverId = firstEdition.covers?.[0] || firstEdition.cover_id;
+    }
+    
+    // If still no cover, try ISBN from first edition
+    let isbnCoverUrl = null;
+    if (!coverId && editions.length > 0) {
+      const firstEdition = editions[0];
+      const isbn = firstEdition.isbn_13?.[0] || firstEdition.isbn_10?.[0];
+      if (isbn) {
+        // Try ISBN-13 first, then ISBN-10
+        isbnCoverUrl = `${this.coversUrl}/b/isbn/${isbn}-L.jpg`;
+      }
+    }
     
     // Find available download links from editions
     // Try to find editions with ocaid (Open Content Archive ID) for Archive.org access
@@ -481,10 +569,12 @@ class OpenLibraryService {
           : null,
       })),
       subjects: book.subjects?.slice(0, 10) || [],
+      languages: this.normalizeLanguages(book.languages || []), // Languages from work
       coverId,
+      // Use cover ID if available, otherwise try ISBN-based cover URL
       coverUrl: coverId 
         ? `${this.coversUrl}/b/id/${coverId}-L.jpg`
-        : null,
+        : isbnCoverUrl,
       publishYear,
       firstPublishDate: book.first_publish_date,
       downloadLinks,
@@ -494,7 +584,12 @@ class OpenLibraryService {
         publishers: e.publishers,
         publishDate: e.publish_date,
         pageCount: e.number_of_pages,
-        language: e.languages?.map((l) => l.key?.replace('/languages/', '')),
+        language: e.languages?.map((l) => {
+          const langKey = l.key || l;
+          return typeof langKey === 'string' 
+            ? langKey.replace('/languages/', '').toLowerCase()
+            : String(langKey).toLowerCase();
+        }) || [],
       })),
       // Open Library ratings (from work data if available)
       openLibraryRating: book.ratings?.average ? Number(book.ratings.average) : null,

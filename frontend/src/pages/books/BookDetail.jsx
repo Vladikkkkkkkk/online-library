@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, Heart, BookOpen, Calendar, Globe, User, ExternalLink, Music } from 'lucide-react';
+import { ArrowLeft, Heart, BookOpen, Calendar, Globe, User, ExternalLink, Bookmark } from 'lucide-react';
 import { useBook } from '../../hooks';
 import { useBookStatus, useSaveBook, useRemoveBook } from '../../hooks/useLibrary';
 import { Button, Loader } from '../../components/common';
@@ -19,7 +19,8 @@ const BookDetail = () => {
   const [showPlaylistModal, setShowPlaylistModal] = useState(false);
 
   const { data: bookData, isLoading } = useBook(id);
-  const { data: statusData } = useBookStatus(id);
+  // Only check book status for authenticated users
+  const { data: statusData } = useBookStatus(id, { enabled: isAuthenticated });
   const saveBook = useSaveBook();
   const removeBook = useRemoveBook();
 
@@ -57,7 +58,13 @@ const BookDetail = () => {
     );
   }
 
-  const authors = book.authors?.map(a => a.name || a).join(', ') || 'Unknown Author';
+  // Get authors list - can be array of objects or strings
+  const authorsList = book.authors || [];
+  const authorNames = authorsList.map(a => {
+    if (typeof a === 'string') return a;
+    return a?.name || a;
+  }).filter(Boolean);
+  
   // Open Library returns subjects as array of strings, not objects
   const categories = book.subjects || book.categories || [];
   
@@ -88,10 +95,27 @@ const BookDetail = () => {
           <div className="book-detail__info">
             <h1 className="book-detail__title">{book.title}</h1>
             
-            <p className="book-detail__authors">
+            <div className="book-detail__authors">
               <User size={18} />
-              {authors}
-            </p>
+              <div className="book-detail__authors-list">
+                {authorNames.length > 0 ? (
+                  authorNames.map((authorName, index) => (
+                    <span key={index}>
+                      <Link
+                        to={`/books?author=${encodeURIComponent(authorName)}`}
+                        className="book-detail__author-link"
+                        title={t('books.viewAuthorBooks')}
+                      >
+                        {authorName}
+                      </Link>
+                      {index < authorNames.length - 1 && ', '}
+                    </span>
+                  ))
+                ) : (
+                  'Unknown Author'
+                )}
+              </div>
+            </div>
 
             <div className="book-detail__meta">
               {book.publishYear && (
@@ -147,8 +171,8 @@ const BookDetail = () => {
                     variant="secondary"
                     onClick={() => setShowPlaylistModal(true)}
                   >
-                    <Music size={18} />
-                    Add to Playlist
+                    <Bookmark size={18} />
+                    Додати до списку
                   </Button>
                 </>
               )}

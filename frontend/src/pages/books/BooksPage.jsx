@@ -24,6 +24,7 @@ const BooksPage = () => {
     keywords: searchParams.get('keywords') || '',
     yearFrom: searchParams.get('yearFrom') || '',
     yearTo: searchParams.get('yearTo') || '',
+    sortBy: searchParams.get('sortBy') || 'relevance',
   });
   const [page, setPage] = useState(1);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -116,15 +117,31 @@ const BooksPage = () => {
             />
           </form>
 
-          <Button
-            variant="secondary"
-            onClick={() => setIsFilterOpen(!isFilterOpen)}
-            className={hasActiveFilters ? 'books-page__filter-btn--active' : ''}
-          >
-            <Filter size={18} />
-            {t('books.filters')}
-            {hasActiveFilters && <span className="books-page__filter-badge" />}
-          </Button>
+          <div className="books-page__toolbar-actions">
+            <div className="books-page__sort">
+              <label htmlFor="sort-select">{t('books.sortBy') || 'Sort by:'}</label>
+              <select
+                id="sort-select"
+                value={filters.sortBy}
+                onChange={(e) => handleFilterChange('sortBy', e.target.value)}
+                className="books-page__sort-select"
+              >
+                <option value="relevance">{t('books.sortRelevance') || 'Relevance'}</option>
+                <option value="rating_desc">{t('books.sortRatingDesc') || 'Highest Rating'}</option>
+                <option value="rating_asc">{t('books.sortRatingAsc') || 'Lowest Rating'}</option>
+              </select>
+            </div>
+
+            <Button
+              variant="secondary"
+              onClick={() => setIsFilterOpen(!isFilterOpen)}
+              className={hasActiveFilters ? 'books-page__filter-btn--active' : ''}
+            >
+              <Filter size={18} />
+              {t('books.filters')}
+              {hasActiveFilters && <span className="books-page__filter-badge" />}
+            </Button>
+          </div>
         </div>
 
         {isFilterOpen && (
@@ -159,10 +176,10 @@ const BooksPage = () => {
             </div>
 
             <div className="books-page__filter-group">
-              <label>{t('books.title') || 'Title'}</label>
+              <label>{t('books.titleField') || 'Назва книги'}</label>
               <input
                 type="text"
-                placeholder={t('books.titlePlaceholder') || 'Enter book title'}
+                placeholder={t('books.titlePlaceholder') || 'Введіть назву книги'}
                 value={filters.title}
                 onChange={(e) => handleFilterChange('title', e.target.value)}
               />

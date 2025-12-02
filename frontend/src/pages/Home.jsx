@@ -1,18 +1,25 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ArrowRight, BookOpen, Search, Download, Users } from 'lucide-react';
-import { useTrendingBooks, useCategories } from '../hooks';
+import { ArrowRight, BookOpen, Search, Users, Sparkles } from 'lucide-react';
+import { useTrendingBooks, useCategories, useRecommendations } from '../hooks';
 import { BookGrid } from '../components/books';
 import { Button, Loader } from '../components/common';
+import useAuthStore from '../context/authStore';
 import './Home.css';
 
 const Home = () => {
   const { t } = useTranslation();
+  const { isAuthenticated } = useAuthStore();
   const { data: trendingData, isLoading: trendingLoading } = useTrendingBooks('weekly', 8);
   const { data: categoriesData, isLoading: categoriesLoading } = useCategories();
+  const { data: recommendationsData, isLoading: recommendationsLoading } = useRecommendations(
+    8,
+    isAuthenticated // Only fetch if authenticated
+  );
 
   const trendingBooks = trendingData?.data || [];
   const categories = categoriesData?.data?.slice(0, 8) || [];
+  const recommendations = recommendationsData?.data || [];
 
   return (
     <div className="home">
@@ -36,7 +43,7 @@ const Home = () => {
               </Link>
               <Link to="/register">
                 <Button variant="secondary" size="lg">
-                  {t('home.hero.getStarted')}
+                  {t('home.hero.getStarted') || 'Почати'}
                 </Button>
               </Link>
             </div>
@@ -70,13 +77,6 @@ const Home = () => {
           </div>
           <div className="feature">
             <div className="feature__icon">
-              <Download size={24} />
-            </div>
-            <h3>{t('home.features.download')}</h3>
-            <p>{t('home.features.downloadDesc')}</p>
-          </div>
-          <div className="feature">
-            <div className="feature__icon">
               <Users size={24} />
             </div>
             <h3>{t('home.features.personal')}</h3>
@@ -84,6 +84,31 @@ const Home = () => {
           </div>
         </div>
       </section>
+
+      {/* Recommendations Section - Only for authenticated users */}
+      {isAuthenticated && (
+        <section className="section section--recommendations">
+          <div className="section__container">
+            <div className="section__header">
+              <h2 className="section__title">
+                <Sparkles size={24} style={{ display: 'inline-block', marginRight: '0.5rem', verticalAlign: 'middle' }} />
+                {t('home.recommendations') || 'Рекомендації для вас'}
+              </h2>
+            </div>
+            {recommendationsLoading ? (
+              <div className="section__loading">
+                <Loader />
+              </div>
+            ) : recommendations.length > 0 ? (
+              <BookGrid books={recommendations} showActions={true} />
+            ) : (
+              <div className="section__empty">
+                <p>{t('home.noRecommendations') || 'Почніть оцінювати книги, щоб отримувати персоналізовані рекомендації!'}</p>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
 
       {/* Trending Books Section */}
       <section className="section">

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Music, Plus } from 'lucide-react';
+import { Bookmark, Plus } from 'lucide-react';
 import { useUserPlaylists, useAddBookToPlaylist } from '../../hooks/usePlaylists';
 import { Button, Loader } from '../common';
 import './AddToPlaylist.css';
@@ -37,8 +37,8 @@ const AddToPlaylist = ({ openLibraryId, onClose }) => {
   return (
     <div className="add-to-playlist">
       <div className="add-to-playlist__header">
-        <Music size={24} />
-        <h3>Add to Playlist</h3>
+        <Bookmark size={24} />
+        <h3>Додати до списку</h3>
       </div>
 
       {playlists.length === 0 ? (

@@ -5,14 +5,20 @@ require('dotenv').config();
 
 const config = require('./config');
 const { connectDB } = require('./config/database');
+const { connectRedis } = require('./config/redis');
 const routes = require('./routes');
 const { errorHandler, notFoundHandler } = require('./middleware/errorHandler');
+const swaggerUi = require('swagger-ui-express');
+const swaggerSpec = require('./config/swagger');
 
 // Create Express app
 const app = express();
 
 // Connect to database
 connectDB();
+
+// Connect to Redis (non-blocking, continues if Redis unavailable)
+connectRedis();
 
 // Middleware
 app.use(cors(config.cors));
@@ -24,6 +30,12 @@ app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 
 // API routes (includes /api/uploads static files)
 app.use('/api', routes);
+
+// Swagger API Documentation
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+  customCss: '.swagger-ui .topbar { display: none }',
+  customSiteTitle: 'Online Library API Documentation',
+}));
 
 // Root endpoint
 app.get('/', (req, res) => {
@@ -48,6 +60,7 @@ const server = app.listen(PORT, () => {
   📚 Online Library API
   🌐 http://localhost:${PORT}
   📖 API Health: http://localhost:${PORT}/api/health
+  📘 Swagger Docs: http://localhost:${PORT}/api-docs
   `);
 });
 

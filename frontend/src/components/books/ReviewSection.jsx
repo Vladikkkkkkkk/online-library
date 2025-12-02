@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Star, Edit2, Trash2, User } from 'lucide-react';
 import { useBookReviews, useUserReview, useCreateOrUpdateReview, useDeleteReview } from '../../hooks/useReviews';
@@ -13,7 +14,8 @@ const ReviewSection = ({ openLibraryId }) => {
   const [editingReview, setEditingReview] = useState(null);
 
   const { data: reviewsData, isLoading } = useBookReviews(openLibraryId);
-  const { data: userReviewData } = useUserReview(openLibraryId);
+  // Only fetch user review for authenticated users
+  const { data: userReviewData } = useUserReview(openLibraryId, { enabled: isAuthenticated });
   const createOrUpdateReview = useCreateOrUpdateReview();
   const deleteReview = useDeleteReview();
 
@@ -176,7 +178,12 @@ const ReviewSection = ({ openLibraryId }) => {
 
       {reviews.length === 0 && !isAuthenticated && (
         <div className="review-section__empty">
-          <p>No reviews yet. Be the first to review this book!</p>
+          <p>No reviews yet.</p>
+          <p style={{ marginTop: '0.5rem', fontSize: '0.875rem', color: 'var(--color-text-muted)' }}>
+            <Link to="/login" style={{ color: 'var(--color-primary)', textDecoration: 'none' }}>
+              Sign in
+            </Link> to be the first to review this book!
+          </p>
         </div>
       )}
       

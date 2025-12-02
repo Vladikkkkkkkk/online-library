@@ -32,8 +32,12 @@ const getUserPlaylists = asyncHandler(async (req, res) => {
  */
 const getPlaylistById = asyncHandler(async (req, res) => {
   const { id } = req.params;
+  const { page, limit } = req.query;
 
-  const playlist = await playlistService.getPlaylistById(id, req.user?.id);
+  const playlist = await playlistService.getPlaylistById(id, req.user?.id, {
+    page: parseInt(page, 10) || 1,
+    limit: parseInt(limit, 10),
+  });
 
   res.json({
     success: true,

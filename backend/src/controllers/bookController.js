@@ -24,6 +24,7 @@ const searchBooks = asyncHandler(async (req, res) => {
     language,
     yearFrom,
     yearTo,
+    sortBy,
   } = req.query;
 
   const results = await bookService.searchBooks({
@@ -38,6 +39,7 @@ const searchBooks = asyncHandler(async (req, res) => {
     language,
     yearFrom: yearFrom ? parseInt(yearFrom, 10) : undefined,
     yearTo: yearTo ? parseInt(yearTo, 10) : undefined,
+    sortBy: sortBy || 'relevance',
   });
 
   res.json({

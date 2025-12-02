@@ -8,8 +8,8 @@ export const playlistsApi = {
   },
 
   // Get playlist by ID
-  getById: async (id) => {
-    const response = await apiClient.get(`/playlists/${id}`);
+  getById: async (id, params = {}) => {
+    const response = await apiClient.get(`/playlists/${id}`, { params });
     return response.data;
   },
 

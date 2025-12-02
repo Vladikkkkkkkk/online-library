@@ -8,6 +8,7 @@ const categoryRoutes = require('./categoryRoutes');
 const libraryRoutes = require('./libraryRoutes');
 const playlistRoutes = require('./playlistRoutes');
 const reviewRoutes = require('./reviewRoutes');
+const recommendationRoutes = require('./recommendationRoutes');
 const adminRoutes = require('./adminRoutes');
 
 // API health check
@@ -26,6 +27,7 @@ router.use('/categories', categoryRoutes);
 router.use('/library', libraryRoutes);
 router.use('/playlists', playlistRoutes);
 router.use('/', reviewRoutes); // Review routes are already prefixed with /books/ and /reviews/
+router.use('/recommendations', recommendationRoutes);
 router.use('/admin', adminRoutes);
 
 module.exports = router;

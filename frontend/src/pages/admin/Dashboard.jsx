@@ -12,7 +12,8 @@ const Dashboard = () => {
     staleTime: 5 * 60 * 1000,
   });
 
-  const stats = statsData?.data || {};
+  // Handle both response structures: {success: true, data: {...}} or direct data
+  const stats = statsData?.data || statsData || {};
 
   if (isLoading) {
     return (

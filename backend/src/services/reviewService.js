@@ -3,6 +3,9 @@ const ApiError = require('../utils/ApiError');
 const { paginate, paginationResponse } = require('../utils/helpers');
 const openLibraryService = require('./openLibraryService');
 const bookService = require('./bookService');
+const cache = require('../utils/cache');
+const config = require('../config');
+const axios = require('axios');
 
 /**
  * Review Service - manages book reviews and ratings
@@ -50,18 +53,35 @@ class ReviewService {
     const ourRating = ratingStats._avg.rating ? Number(ratingStats._avg.rating) : null;
     const ourRatingCount = ratingStats._count.rating || 0;
 
-    // Get Open Library ratings from book data
+    // Get Open Library ratings - use lightweight search API instead of full getBookById
     let openLibraryRating = null;
     let openLibraryRatingCount = 0;
     try {
-      const bookData = await openLibraryService.getBookById(openLibraryId);
-      openLibraryRating = bookData.openLibraryRating || null;
-      openLibraryRatingCount = bookData.openLibraryRatingCount || 0;
+      // Check cache first for Open Library ratings
+      const olRatingCacheKey = `ol_ratings:${openLibraryId}`;
+      const cachedOlRating = await cache.get(olRatingCacheKey);
+      
+      if (cachedOlRating) {
+        openLibraryRating = cachedOlRating.rating;
+        openLibraryRatingCount = cachedOlRating.count;
+      } else {
+        // Lightweight API call to get only ratings
+        const searchResponse = await axios.get(
+          `${process.env.OPEN_LIBRARY_API_URL || 'https://openlibrary.org'}/search.json?q=key:/works/${openLibraryId}&fields=key,ratings_average,ratings_count&limit=1`
+        );
+        if (searchResponse.data.docs && searchResponse.data.docs.length > 0) {
+          const searchBook = searchResponse.data.docs[0];
+          openLibraryRating = searchBook.ratings_average ? Number(searchBook.ratings_average) : null;
+          openLibraryRatingCount = searchBook.ratings_count || 0;
+          // Cache Open Library rating for 1 hour
+          await cache.set(olRatingCacheKey, { rating: openLibraryRating, count: openLibraryRatingCount }, 3600);
+        }
+      }
     } catch (error) {
       console.error(`Failed to fetch Open Library ratings for ${openLibraryId}:`, error.message);
     }
 
-    // Combine ratings using bookService method
+    // Combine ratings using bookService method (it will use cache internally)
     const combinedRatings = await bookService.combineRatings(
       openLibraryId,
       openLibraryRating,
@@ -154,6 +174,75 @@ class ReviewService {
   }
 
   /**
+   * Invalidate cache for a book's ratings and reviews
+   * @param {string} openLibraryId - Open Library ID
+   * @param {string} userId - User ID (optional, for recommendations cache)
+   */
+  async invalidateBookCache(openLibraryId, userId = null) {
+    try {
+      // Invalidate combined ratings cache (most important - this affects all book displays)
+      await cache.del(`ratings:combined:${openLibraryId}`);
+      // Invalidate book details cache
+      await cache.del(`book:${openLibraryId}`);
+      // Invalidate Open Library ratings cache
+      await cache.del(`ol_ratings:${openLibraryId}`);
+      
+      // Invalidate search and trending caches that might include this book
+      // This is important to ensure ratings are updated everywhere
+      try {
+        await cache.delPattern(`search:*`);
+        await cache.delPattern(`trending:*`);
+      } catch (patternError) {
+        // Pattern deletion can be slow, log but don't fail
+        console.warn('Error invalidating search/trending cache patterns:', patternError.message);
+      }
+      
+      // Invalidate user's recommendations cache if userId provided
+      if (userId) {
+        await cache.delPattern(`recommendations:${userId}:*`);
+        await cache.del(`user_preferences:${userId}`); // Invalidate preferences cache
+        await cache.del(`excluded_books:${userId}`); // Invalidate excluded books cache
+      }
+      
+      // Invalidate saved books cache for all users (book rating changed, affects all users)
+      // Note: This is broad but necessary for accurate ratings display
+      try {
+        // Get all user IDs who saved this book to invalidate their cache
+        const usersWithBook = await prisma.savedBook.findMany({
+          where: { openLibraryId },
+          select: { userId: true },
+          distinct: ['userId'],
+        });
+        for (const savedBook of usersWithBook) {
+          await cache.delPattern(`saved_books:${savedBook.userId}:*`);
+        }
+      } catch (err) {
+        // Don't fail if this fails
+        console.warn('Error invalidating saved books cache:', err.message);
+      }
+      
+      // Invalidate playlist caches that might include this book
+      try {
+        const playlistsWithBook = await prisma.playlistBook.findMany({
+          where: { openLibraryId },
+          select: { playlistId: true, playlist: { select: { userId: true } } },
+          distinct: ['playlistId'],
+        });
+        for (const playlistBook of playlistsWithBook) {
+          if (playlistBook.playlist?.userId) {
+            await cache.delPattern(`playlist:${playlistBook.playlistId}:*`);
+          }
+        }
+      } catch (err) {
+        console.warn('Error invalidating playlist cache:', err.message);
+      }
+    } catch (error) {
+      console.error(`Cache invalidation error for ${openLibraryId}:`, error.message);
+      // Don't throw - cache invalidation failure shouldn't break the operation
+    }
+  }
+
+  /**
    * Create or update review
    * @param {string} userId - User ID
    * @param {string} openLibraryId - Open Library ID
@@ -168,11 +257,18 @@ class ReviewService {
       throw ApiError.badRequest('Rating must be between 1 and 5');
     }
 
-    // Verify book exists in Open Library
+    // Verify book exists in Open Library - use lightweight check instead of full getBookById
     try {
-      await openLibraryService.getBookById(openLibraryId);
+      // Use HEAD request to check if book exists without downloading full data
+      await axios.head(
+        `${process.env.OPEN_LIBRARY_API_URL || 'https://openlibrary.org'}/works/${openLibraryId}.json`,
+        { timeout: 5000, validateStatus: (status) => status < 500 }
+      );
     } catch (error) {
-      throw ApiError.notFound('Book not found in Open Library');
+      if (error.response?.status === 404) {
+        throw ApiError.notFound('Book not found in Open Library');
+      }
+      // If network error, allow creation (book might exist but API is down)
     }
 
     // Check if review already exists
@@ -204,7 +300,7 @@ class ReviewService {
         },
       });
 
-      return {
+      const result = {
         id: updated.id,
         rating: updated.rating,
         title: updated.title,
@@ -213,6 +309,11 @@ class ReviewService {
         updatedAt: updated.updatedAt,
         user: updated.user,
       };
+
+      // Invalidate cache after update
+      await this.invalidateBookCache(openLibraryId, userId);
+
+      return result;
     }
 
     // Create new review
@@ -236,7 +337,7 @@ class ReviewService {
       },
     });
 
-    return {
+    const result = {
       id: review.id,
       rating: review.rating,
       title: review.title,
@@ -245,6 +346,11 @@ class ReviewService {
       updatedAt: review.updatedAt,
       user: review.user,
     };
+
+    // Invalidate cache after create
+    await this.invalidateBookCache(openLibraryId, userId);
+
+    return result;
   }
 
   /**
@@ -271,6 +377,9 @@ class ReviewService {
     await prisma.review.delete({
       where: { id: review.id },
     });
+
+    // Invalidate cache after delete
+    await this.invalidateBookCache(openLibraryId, userId);
   }
 
   /**

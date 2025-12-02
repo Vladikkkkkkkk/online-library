@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Plus, Music, BookOpen } from 'lucide-react';
+import { Plus, BookOpen, Bookmark } from 'lucide-react';
 import { useUserPlaylists, useCreatePlaylist, useDeletePlaylist } from '../../hooks/usePlaylists';
 import { Button, Loader, Input } from '../../components/common';
 import './PlaylistsPage.css';
@@ -28,8 +28,8 @@ const PlaylistsPage = () => {
       <div className="playlists-page__container">
         <div className="playlists-page__header">
           <div>
-            <h1>My Playlists</h1>
-            <p>Organize your favorite books into playlists</p>
+            <h1>Мої списки книг</h1>
+            <p>Організуйте свої улюблені книги в списки</p>
           </div>
           <Button
             variant="primary"
@@ -54,9 +54,9 @@ const PlaylistsPage = () => {
           </div>
         ) : playlists.length === 0 ? (
           <div className="playlists-page__empty">
-            <Music size={64} />
-            <h2>No playlists yet</h2>
-            <p>Create your first playlist to organize your favorite books!</p>
+            <Bookmark size={64} />
+            <h2>Поки що немає списків</h2>
+            <p>Створіть свій перший список, щоб організувати улюблені книги!</p>
           </div>
         ) : (
           <div className="playlists-page__grid">
@@ -83,7 +83,7 @@ const PlaylistCard = ({ playlist }) => {
   return (
     <Link to={`/playlists/${playlist.id}`} className="playlist-card">
       <div className="playlist-card__icon">
-        <Music size={32} />
+        <Bookmark size={32} />
       </div>
       <div className="playlist-card__info">
         <h3 className="playlist-card__name">{playlist.name}</h3>

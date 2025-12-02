@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { authApi } from '../api/auth';
+import { queryClient } from '../config/queryClient';
 
 // Helper function to read token from localStorage
 const getStoredToken = () => {
@@ -86,6 +87,9 @@ const useAuthStore = create(
           const response = await authApi.login({ email, password });
           const { user, token } = response.data;
           
+          // Clear React Query cache to prevent data from previous user
+          queryClient.clear();
+          
           set({
             user,
             token,
@@ -107,6 +111,9 @@ const useAuthStore = create(
           const response = await authApi.register(data);
           const { user, token } = response.data;
           
+          // Clear React Query cache to start fresh
+          queryClient.clear();
+          
           set({
             user,
             token,
@@ -123,6 +130,9 @@ const useAuthStore = create(
 
       // Logout
       logout: () => {
+        // Clear React Query cache to prevent data leakage between users
+        queryClient.clear();
+        
         set({
           user: null,
           token: null,

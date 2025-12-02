@@ -29,6 +29,21 @@ const config = {
     origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
     credentials: true,
   },
+  
+  // Redis settings
+  redis: {
+    host: process.env.REDIS_HOST || 'localhost',
+    port: process.env.REDIS_PORT || 6379,
+    password: process.env.REDIS_PASSWORD || undefined,
+    ttl: {
+      bookRatings: 3600,      // 1 година для рейтингів
+      bookSearch: 300,        // 5 хвилин для пошуку
+      trendingBooks: 1800,    // 30 хвилин для trending
+      bookDetails: 1800,      // 30 хвилин для деталей книги
+      bookReviews: 600,       // 10 хвилин для відгуків
+      combinedRatings: 3600,  // 1 година для об'єднаних рейтингів
+    },
+  },
 };
 
 module.exports = config;
