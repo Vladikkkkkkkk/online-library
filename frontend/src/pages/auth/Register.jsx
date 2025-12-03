@@ -66,6 +66,10 @@ const Register = () => {
                   value: 2,
                   message: 'Minimum 2 characters',
                 },
+                maxLength: {
+                  value: 50,
+                  message: 'Maximum 50 characters',
+                },
               })}
             />
 
@@ -80,6 +84,10 @@ const Register = () => {
                 minLength: {
                   value: 2,
                   message: 'Minimum 2 characters',
+                },
+                maxLength: {
+                  value: 50,
+                  message: 'Maximum 50 characters',
                 },
               })}
             />

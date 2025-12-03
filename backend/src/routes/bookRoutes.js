@@ -15,7 +15,7 @@ const { optionalAuth } = require('../middleware/auth');
  *         name: query
  *         schema:
  *           type: string
- *         description: General search query (title, author, keywords)
+ *         description: General search query (title, author)
  *       - in: query
  *         name: title
  *         schema:
@@ -46,11 +46,6 @@ const { optionalAuth } = require('../middleware/auth');
  *         schema:
  *           type: integer
  *         description: Filter by maximum publish year
- *       - in: query
- *         name: keywords
- *         schema:
- *           type: string
- *         description: Search inside book content (requires full-text available)
  *       - in: query
  *         name: page
  *         schema:

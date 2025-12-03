@@ -108,8 +108,8 @@ const schemas = {
     body: {
       email: { required: true, type: 'email' },
       password: { required: true, type: 'string', minLength: 6 },
-      firstName: { required: true, type: 'string', minLength: 2 },
-      lastName: { required: true, type: 'string', minLength: 2 },
+      firstName: { required: true, type: 'string', minLength: 2, maxLength: 50 },
+      lastName: { required: true, type: 'string', minLength: 2, maxLength: 50 },
     },
   },
   login: {
@@ -120,8 +120,8 @@ const schemas = {
   },
   updateProfile: {
     body: {
-      firstName: { type: 'string', minLength: 2 },
-      lastName: { type: 'string', minLength: 2 },
+      firstName: { type: 'string', minLength: 2, maxLength: 50 },
+      lastName: { type: 'string', minLength: 2, maxLength: 50 },
     },
   },
   changePassword: {

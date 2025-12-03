@@ -3,7 +3,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
+  gap: 0.625rem;
   border: none;
   border-radius: var(--radius-md);
   font-family: inherit;
@@ -11,7 +11,7 @@
   cursor: pointer;
   transition: all 0.2s ease;
   text-decoration: none;
-  line-height: 1;
+  line-height: 1.5;
   white-space: nowrap;
 }
 
@@ -20,6 +20,7 @@
   display: inline-flex;
   align-items: center;
   line-height: 1;
+  vertical-align: middle;
 }
 
 /* Стилі для SVG іконок (lucide-react) */
@@ -29,13 +30,15 @@
   margin: 0;
   padding: 0;
   vertical-align: middle;
+  width: 1em;
+  height: 1em;
 }
 
 /* Вирівнювання тексту */
 .btn span {
   display: inline-flex;
   align-items: center;
-  line-height: 1;
+  line-height: 1.5;
 }
 
 .btn:disabled {

@@ -20,12 +20,28 @@ const searchBooks = asyncHandler(async (req, res) => {
     author,
     title,
     publisher,
-    keywords,
     language,
     yearFrom,
     yearTo,
     sortBy,
   } = req.query;
+
+  // Validate year parameters
+  const currentYear = new Date().getFullYear();
+  let validatedYearFrom = yearFrom ? parseInt(yearFrom, 10) : undefined;
+  let validatedYearTo = yearTo ? parseInt(yearTo, 10) : undefined;
+
+  if (validatedYearFrom !== undefined) {
+    if (validatedYearFrom < 0 || validatedYearFrom > currentYear) {
+      validatedYearFrom = undefined;
+    }
+  }
+
+  if (validatedYearTo !== undefined) {
+    if (validatedYearTo < 0 || validatedYearTo > currentYear) {
+      validatedYearTo = undefined;
+    }
+  }
 
   const results = await bookService.searchBooks({
     query,
@@ -35,10 +51,9 @@ const searchBooks = asyncHandler(async (req, res) => {
     author,
     title,
     publisher,
-    keywords,
     language,
-    yearFrom: yearFrom ? parseInt(yearFrom, 10) : undefined,
-    yearTo: yearTo ? parseInt(yearTo, 10) : undefined,
+    yearFrom: validatedYearFrom,
+    yearTo: validatedYearTo,
     sortBy: sortBy || 'relevance',
   });
 

@@ -29,7 +29,7 @@ const ReviewSection = ({ openLibraryId }) => {
   };
 
   const handleDelete = async () => {
-    if (window.confirm('Are you sure you want to delete your review?')) {
+    if (window.confirm(t('books.deleteReviewConfirm'))) {
       deleteReview.mutate(openLibraryId);
     }
   };
@@ -57,7 +57,7 @@ const ReviewSection = ({ openLibraryId }) => {
   return (
     <div className="review-section">
       <div className="review-section__header">
-        <h2>Reviews & Ratings</h2>
+        <h2>{t('books.reviewsAndRatings')}</h2>
         {stats.averageRating && stats.ratingCount > 0 ? (
           <div className="review-section__stats">
             <div className="review-section__rating">
@@ -66,7 +66,7 @@ const ReviewSection = ({ openLibraryId }) => {
                 {stats.averageRating.toFixed(1)}
               </span>
               <span className="review-section__rating-count">
-                ({stats.ratingCount} {stats.ratingCount === 1 ? 'rating' : 'ratings'})
+                ({stats.ratingCount} {stats.ratingCount === 1 ? t('books.rating') : t('books.ratings')})
               </span>
             </div>
           </div>
@@ -74,7 +74,7 @@ const ReviewSection = ({ openLibraryId }) => {
           <div className="review-section__stats">
             <div className="review-section__rating">
               <Star size={24} fill="none" stroke="currentColor" />
-              <span className="review-section__rating-value">No ratings yet</span>
+              <span className="review-section__rating-value">{t('books.noRatingsYet')}</span>
             </div>
           </div>
         )}
@@ -88,7 +88,7 @@ const ReviewSection = ({ openLibraryId }) => {
               <div className="review-item__header">
                 <div className="review-item__user">
                   <User size={20} />
-                  <span>{user?.firstName || 'You'}</span>
+                  <span>{user?.firstName || t('books.you')}</span>
                 </div>
                 <div className="review-item__rating">
                   {Array.from({ length: 5 }).map((_, i) => (
@@ -118,7 +118,7 @@ const ReviewSection = ({ openLibraryId }) => {
           ) : (
             !showForm && (
               <Button onClick={() => setShowForm(true)} variant="primary">
-                Write a Review
+                {t('books.writeReview')}
               </Button>
             )
           )}
@@ -140,7 +140,7 @@ const ReviewSection = ({ openLibraryId }) => {
       {/* Other Reviews */}
       {reviews.length > 0 && (
         <div className="review-section__reviews">
-          <h3>All Reviews ({reviews.length})</h3>
+          <h3>{t('books.allReviews')} ({reviews.length})</h3>
           {reviews
             .filter((r) => !userReview || r.id !== userReview.id)
             .map((review) => (
@@ -178,18 +178,18 @@ const ReviewSection = ({ openLibraryId }) => {
 
       {reviews.length === 0 && !isAuthenticated && (
         <div className="review-section__empty">
-          <p>No reviews yet.</p>
+          <p>{t('books.noReviewsYet')}</p>
           <p style={{ marginTop: '0.5rem', fontSize: '0.875rem', color: 'var(--color-text-muted)' }}>
             <Link to="/login" style={{ color: 'var(--color-primary)', textDecoration: 'none' }}>
-              Sign in
-            </Link> to be the first to review this book!
+              {t('books.signIn')}
+            </Link> {t('books.signInToReview')}
           </p>
         </div>
       )}
       
       {reviews.length === 0 && isAuthenticated && !showForm && stats.averageRating && (
         <div className="review-section__empty">
-          <p>This book has ratings but no written reviews yet. Be the first to write a review!</p>
+          <p>{t('books.noWrittenReviews')}</p>
         </div>
       )}
     </div>
@@ -197,6 +197,7 @@ const ReviewSection = ({ openLibraryId }) => {
 };
 
 const ReviewForm = ({ review, onSubmit, onCancel, isLoading }) => {
+  const { t } = useTranslation();
   const [rating, setRating] = useState(review?.rating || 0);
   const [title, setTitle] = useState(review?.title || '');
   const [comment, setComment] = useState(review?.comment || '');
@@ -204,16 +205,16 @@ const ReviewForm = ({ review, onSubmit, onCancel, isLoading }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (rating === 0) {
-      alert('Please select a rating');
+      alert(t('books.selectRating'));
       return;
     }
     onSubmit({ rating, title: title.trim() || null, comment: comment.trim() || null });
   };
-
+  
   return (
     <form className="review-form" onSubmit={handleSubmit}>
       <div className="review-form__rating">
-        <label>Rating *</label>
+        <label>{t('books.reviewRating')}</label>
         <div className="review-form__stars">
           {Array.from({ length: 5 }).map((_, i) => (
             <button
@@ -229,24 +230,24 @@ const ReviewForm = ({ review, onSubmit, onCancel, isLoading }) => {
       </div>
 
       <div className="review-form__field">
-        <label htmlFor="review-title">Title (optional)</label>
+        <label htmlFor="review-title">{t('books.reviewTitle')}</label>
         <input
           id="review-title"
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          placeholder="Give your review a title"
+          placeholder={t('books.reviewTitlePlaceholder')}
           maxLength={100}
         />
       </div>
 
       <div className="review-form__field">
-        <label htmlFor="review-comment">Review (optional)</label>
+        <label htmlFor="review-comment">{t('books.reviewComment')}</label>
         <textarea
           id="review-comment"
           value={comment}
           onChange={(e) => setComment(e.target.value)}
-          placeholder="Share your thoughts about this book..."
+          placeholder={t('books.reviewCommentPlaceholder')}
           rows={5}
           maxLength={1000}
         />
@@ -255,10 +256,10 @@ const ReviewForm = ({ review, onSubmit, onCancel, isLoading }) => {
 
       <div className="review-form__actions">
         <Button type="submit" variant="primary" loading={isLoading}>
-          {review ? 'Update Review' : 'Submit Review'}
+          {review ? t('books.updateReview') : t('books.submitReview')}
         </Button>
         <Button type="button" variant="secondary" onClick={onCancel}>
-          Cancel
+          {t('common.cancel')}
         </Button>
       </div>
     </form>

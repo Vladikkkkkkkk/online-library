@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { ArrowLeft, Bookmark, Plus, Trash2, Edit2 } from 'lucide-react';
 import { usePlaylist, useAddBookToPlaylist, useRemoveBookFromPlaylist, useUpdatePlaylist, useDeletePlaylist } from '../../hooks/usePlaylists';
 import { BookGrid } from '../../components/books';
-import { Button, Loader } from '../../components/common';
+import { Button, Loader, ConfirmModal } from '../../components/common';
 import useAuthStore from '../../context/authStore';
 import './PlaylistDetail.css';
 
@@ -19,6 +19,7 @@ const PlaylistDetail = () => {
   const removeBook = useRemoveBookFromPlaylist();
   const updatePlaylist = useUpdatePlaylist();
   const deletePlaylist = useDeletePlaylist();
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   const playlist = data?.data;
 
@@ -29,13 +30,15 @@ const PlaylistDetail = () => {
   };
 
   const handleDelete = () => {
-    if (window.confirm(`Are you sure you want to delete "${playlist?.name}"?`)) {
-      deletePlaylist.mutate(id, {
-        onSuccess: () => {
-          navigate('/playlists');
-        },
-      });
-    }
+    setShowDeleteModal(true);
+  };
+
+  const confirmDelete = () => {
+    deletePlaylist.mutate(id, {
+      onSuccess: () => {
+        navigate('/playlists');
+      },
+    });
   };
 
   if (isLoading) {
@@ -74,10 +77,13 @@ const PlaylistDetail = () => {
   return (
     <div className="playlist-detail">
       <div className="playlist-detail__container">
-        <Link to="/playlists" className="playlist-detail__back">
+        <button 
+          onClick={() => navigate(-1)} 
+          className="playlist-detail__back"
+        >
           <ArrowLeft size={18} />
-          Back to Playlists
-        </Link>
+          {t('books.backToBooks') || 'Back'}
+        </button>
 
         <div className="playlist-detail__header">
           <div className="playlist-detail__icon">
@@ -149,6 +155,16 @@ const PlaylistDetail = () => {
           </>
         )}
       </div>
+      <ConfirmModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={confirmDelete}
+        title={t('booklists.deleteTitle') || 'Видалити плейлист?'}
+        message={t('booklists.deleteConfirm', { name: playlist?.name }) || `Ви впевнені, що хочете видалити плейлист "${playlist?.name}"?`}
+        confirmText={t('common.delete') || 'Видалити'}
+        cancelText={t('common.cancel') || 'Скасувати'}
+        variant="danger"
+      />
     </div>
   );
 };

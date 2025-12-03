@@ -16,6 +16,13 @@ const BookCard = ({ book, onSave, onRemove, isSaved = false, showActions = true 
     categories = [],
     averageRating,
     ratingCount,
+    isbn,
+    publisher,
+    publishers,
+    numberOfPages,
+    pageCount,
+    language,
+    languages,
   } = book;
 
   // All books are now from Open Library, use openLibraryId or id
@@ -71,6 +78,41 @@ const BookCard = ({ book, onSave, onRemove, isSaved = false, showActions = true 
                   {typeof cat === 'string' ? cat : (cat?.name || cat)}
                 </span>
               ))}
+            </div>
+          )}
+          {(publishYear || language || languages || numberOfPages || pageCount || publisher || publishers || isbn) && (
+            <div className="book-card__meta">
+              {publishYear && (
+                <span className="book-card__meta-item">{publishYear}</span>
+              )}
+              {(language || (languages && languages.length > 0)) && (
+                <span className="book-card__meta-item">
+                  {(typeof language === 'string' 
+                    ? (language.length === 2 
+                        ? language.toUpperCase() 
+                        : language.replace(/\/languages\//, '').substring(0, 3).toUpperCase())
+                    : (languages && languages.length > 0
+                        ? (languages[0].length === 2 ? languages[0].toUpperCase() : languages[0].substring(0, 3).toUpperCase())
+                        : null))}
+                </span>
+              )}
+              {(numberOfPages || pageCount) && (
+                <span className="book-card__meta-item">{(numberOfPages || pageCount)} стор.</span>
+              )}
+              {(publisher || (publishers && publishers.length > 0)) && (
+                <span 
+                  className="book-card__meta-item book-card__meta-item--truncate" 
+                  title={typeof publisher === 'string' ? publisher : (publishers && publishers[0] ? publishers[0] : publisher?.[0])}
+                >
+                  {(() => {
+                    const pub = publisher || (publishers && publishers[0]) || '';
+                    return typeof pub === 'string' ? (pub.length > 15 ? pub.substring(0, 15) + '...' : pub) : (pub[0]?.length > 15 ? pub[0].substring(0, 15) + '...' : pub[0]);
+                  })()}
+                </span>
+              )}
+              {isbn && (
+                <span className="book-card__meta-item" title={`ISBN: ${isbn}`}>ISBN</span>
+              )}
             </div>
           )}
         </div>

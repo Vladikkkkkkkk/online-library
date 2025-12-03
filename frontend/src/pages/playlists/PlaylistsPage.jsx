@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Plus, BookOpen, Bookmark } from 'lucide-react';
 import { useUserPlaylists, useCreatePlaylist, useDeletePlaylist } from '../../hooks/usePlaylists';
-import { Button, Loader, Input } from '../../components/common';
+import { Button, Loader, Input, ConfirmModal } from '../../components/common';
 import './PlaylistsPage.css';
 
 const PlaylistsPage = () => {
@@ -28,15 +28,15 @@ const PlaylistsPage = () => {
       <div className="playlists-page__container">
         <div className="playlists-page__header">
           <div>
-            <h1>Мої списки книг</h1>
-            <p>Організуйте свої улюблені книги в списки</p>
+            <h1>{t('booklists.title')}</h1>
+            <p>{t('booklists.description')}</p>
           </div>
           <Button
             variant="primary"
             onClick={() => setShowCreateForm(!showCreateForm)}
           >
             <Plus size={18} />
-            Create Playlist
+            {t('booklists.createPlaylist')}
           </Button>
         </div>
 
@@ -55,8 +55,8 @@ const PlaylistsPage = () => {
         ) : playlists.length === 0 ? (
           <div className="playlists-page__empty">
             <Bookmark size={64} />
-            <h2>Поки що немає списків</h2>
-            <p>Створіть свій перший список, щоб організувати улюблені книги!</p>
+            <h2>{t('booklists.empty')}</h2>
+            <p>{t('booklists.emptyDesc')}</p>
           </div>
         ) : (
           <div className="playlists-page__grid">
@@ -71,13 +71,17 @@ const PlaylistsPage = () => {
 };
 
 const PlaylistCard = ({ playlist }) => {
+  const { t } = useTranslation();
   const deletePlaylist = useDeletePlaylist();
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   const handleDelete = (e) => {
     e.preventDefault();
-    if (window.confirm(`Are you sure you want to delete "${playlist.name}"?`)) {
-      deletePlaylist.mutate(playlist.id);
-    }
+    setShowDeleteModal(true);
+  };
+
+  const confirmDelete = () => {
+    deletePlaylist.mutate(playlist.id);
   };
 
   return (
@@ -93,10 +97,10 @@ const PlaylistCard = ({ playlist }) => {
         <div className="playlist-card__meta">
           <span className="playlist-card__count">
             <BookOpen size={14} />
-            {playlist.bookCount || 0} {playlist.bookCount === 1 ? 'book' : 'books'}
+            {playlist.bookCount || 0} {playlist.bookCount === 1 ? t('booklists.book') : t('booklists.books')}
           </span>
           {playlist.isPublic && (
-            <span className="playlist-card__badge">Public</span>
+            <span className="playlist-card__badge">{t('booklists.public')}</span>
           )}
         </div>
       </div>
@@ -107,11 +111,22 @@ const PlaylistCard = ({ playlist }) => {
       >
         ×
       </button>
+      <ConfirmModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={confirmDelete}
+        title={t('booklists.deleteTitle') || 'Видалити плейлист?'}
+        message={t('booklists.deleteConfirm', { name: playlist.name }) || `Ви впевнені, що хочете видалити плейлист "${playlist.name}"?`}
+        confirmText={t('common.delete') || 'Видалити'}
+        cancelText={t('common.cancel') || 'Скасувати'}
+        variant="danger"
+      />
     </Link>
   );
 };
 
 const CreatePlaylistForm = ({ onSubmit, onCancel, isLoading }) => {
+  const { t } = useTranslation();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [isPublic, setIsPublic] = useState(false);
@@ -119,7 +134,6 @@ const CreatePlaylistForm = ({ onSubmit, onCancel, isLoading }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!name.trim()) {
-      alert('Please enter a playlist name');
       return;
     }
     onSubmit({ name: name.trim(), description: description.trim() || null, isPublic });
@@ -131,23 +145,25 @@ const CreatePlaylistForm = ({ onSubmit, onCancel, isLoading }) => {
   return (
     <form className="create-playlist-form" onSubmit={handleSubmit}>
       <div className="create-playlist-form__field">
-        <label htmlFor="playlist-name">Playlist Name *</label>
+        <label htmlFor="playlist-name">{t('booklists.playlistName')}</label>
         <Input
           id="playlist-name"
           value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="My Favorite Books"
+          onChange={(e) => setName(e.target.value.slice(0, 100))}
+          placeholder={t('booklists.playlistNamePlaceholder')}
           required
+          maxLength={100}
         />
       </div>
       <div className="create-playlist-form__field">
-        <label htmlFor="playlist-description">Description</label>
+        <label htmlFor="playlist-description">{t('booklists.playlistDescription')}</label>
         <textarea
           id="playlist-description"
           value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          placeholder="Optional description..."
+          onChange={(e) => setDescription(e.target.value.slice(0, 500))}
+          placeholder={t('booklists.playlistDescriptionPlaceholder')}
           rows={3}
+          maxLength={500}
         />
       </div>
       <div className="create-playlist-form__field">
@@ -157,15 +173,15 @@ const CreatePlaylistForm = ({ onSubmit, onCancel, isLoading }) => {
             checked={isPublic}
             onChange={(e) => setIsPublic(e.target.checked)}
           />
-          <span>Make this playlist public</span>
+          <span>{t('booklists.makePublic')}</span>
         </label>
       </div>
       <div className="create-playlist-form__actions">
         <Button type="submit" variant="primary" loading={isLoading}>
-          Create Playlist
+          {t('booklists.createPlaylist')}
         </Button>
         <Button type="button" variant="secondary" onClick={onCancel}>
-          Cancel
+          {t('common.cancel')}
         </Button>
       </div>
     </form>

@@ -13,7 +13,7 @@ class OpenLibraryService {
 
   /**
    * Search books by query using Open Library search syntax
-   * @param {string} query - Search query (general search or keywords)
+   * @param {string} query - Search query (general search)
    * @param {object} options - Search options
    * @returns {Promise<object>} - Search results
    */
@@ -26,7 +26,6 @@ class OpenLibraryService {
       author,
       title,
       publisher,
-      keywords,
       yearFrom,
       yearTo,
     } = options;
@@ -41,15 +40,8 @@ class OpenLibraryService {
       // Build search query using Open Library syntax
       const searchParts = [];
 
-      // Keywords search - search only in books with full text available
-      // This is the closest we can get to "search inside book" without using archive.org API
-      if (keywords && keywords.trim()) {
-        // For full-text search, we need books that have full text available
-        searchParts.push(`has_fulltext:true`);
-        searchParts.push(keywords.trim());
-      }
       // General query - normal metadata search
-      else if (query && query.trim()) {
+      if (query && query.trim()) {
         searchParts.push(query.trim());
       }
 
@@ -578,6 +570,12 @@ class OpenLibraryService {
       publishYear,
       firstPublishDate: book.first_publish_date,
       downloadLinks,
+      // Extract common fields from first edition if available
+      isbn: editions[0]?.isbn_13?.[0] || editions[0]?.isbn_10?.[0] || null,
+      publisher: editions[0]?.publishers?.[0] || null,
+      publishers: editions[0]?.publishers || [],
+      pageCount: editions[0]?.number_of_pages || null,
+      numberOfPages: editions[0]?.number_of_pages || null, // Alias for compatibility
       editions: editions.map((e) => ({
         title: e.title,
         isbn: e.isbn_13?.[0] || e.isbn_10?.[0],

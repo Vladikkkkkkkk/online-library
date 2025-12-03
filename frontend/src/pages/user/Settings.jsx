@@ -96,6 +96,7 @@ const Settings = () => {
                     {...registerProfile('firstName', {
                       required: "Ім'я обов'язкове",
                       minLength: { value: 2, message: "Мінімум 2 символи" },
+                      maxLength: { value: 50, message: "Максимум 50 символів" },
                     })}
                     error={profileErrors.firstName?.message}
                   />
@@ -108,6 +109,7 @@ const Settings = () => {
                     {...registerProfile('lastName', {
                       required: "Прізвище обов'язкове",
                       minLength: { value: 2, message: "Мінімум 2 символи" },
+                      maxLength: { value: 50, message: "Максимум 50 символів" },
                     })}
                     error={profileErrors.lastName?.message}
                   />

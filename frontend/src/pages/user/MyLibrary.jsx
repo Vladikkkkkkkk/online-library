@@ -4,8 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Heart, Trash2, BookOpen, Search, Filter } from 'lucide-react';
 import { useSavedBooks, useRemoveBook } from '../../hooks/useLibrary';
 import { BookGrid } from '../../components/books';
-import { Button, Input, Loader } from '../../components/common';
-import toast from 'react-hot-toast';
+import { Button, Input, Loader, ConfirmModal } from '../../components/common';
 import './MyLibrary.css';
 
 const MyLibrary = () => {
@@ -13,6 +12,7 @@ const MyLibrary = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(1);
   const limit = 12;
+  const [bookToRemove, setBookToRemove] = useState(null);
   const { data: libraryData, isLoading } = useSavedBooks({ page, limit });
   const removeBook = useRemoveBook();
 
@@ -31,14 +31,15 @@ const MyLibrary = () => {
     return title.includes(query) || authors.includes(query);
   });
 
-  const handleRemoveBook = async (openLibraryId, bookTitle) => {
-    if (window.confirm(t('library.removeConfirm', { title: bookTitle }))) {
-      removeBook.mutate({ openLibraryId }, {
+  const handleRemoveBook = (openLibraryId, bookTitle) => {
+    setBookToRemove({ openLibraryId, title: bookTitle });
+  };
+
+  const confirmRemoveBook = () => {
+    if (bookToRemove) {
+      removeBook.mutate({ openLibraryId: bookToRemove.openLibraryId }, {
         onSuccess: () => {
-          toast.success(t('library.removed'));
-        },
-        onError: () => {
-          toast.error(t('library.removeError'));
+          setBookToRemove(null);
         },
       });
     }
@@ -66,7 +67,7 @@ const MyLibrary = () => {
             </h1>
             <p className="my-library__subtitle">
               {totalBooks > 0 
-                ? `${totalBooks} ${totalBooks === 1 ? 'книга' : totalBooks < 5 ? 'книги' : 'книг'} збережено`
+                ? `${totalBooks} ${totalBooks === 1 ? t('library.book') : totalBooks < 5 ? t('library.books') : t('common.books')} ${t('library.booksSavedText')}`
                 : t('library.empty')}
             </p>
           </div>
@@ -160,13 +161,27 @@ const MyLibrary = () => {
         {/* Info Section */}
         {totalBooks > 0 && (
           <div className="my-library__info">
-            <h3>💡 Підказка</h3>
+            <h3>💡 {t('library.tip')}</h3>
             <p>
-              Натисніть на книгу, щоб переглянути деталі.
+              {t('library.tipClickBook')}
             </p>
           </div>
         )}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {bookToRemove && (
+        <ConfirmModal
+          isOpen={!!bookToRemove}
+          onClose={() => setBookToRemove(null)}
+          onConfirm={confirmRemoveBook}
+          title={t('library.removeTitle') || 'Видалити книгу?'}
+          message={t('library.removeConfirm', { title: bookToRemove.title }) || `Ви впевнені, що хочете видалити "${bookToRemove.title}" з бібліотеки?`}
+          confirmText={t('common.delete') || 'Видалити'}
+          cancelText={t('common.cancel') || 'Скасувати'}
+          variant="danger"
+        />
+      )}
     </div>
   );
 };

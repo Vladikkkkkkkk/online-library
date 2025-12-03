@@ -112,7 +112,6 @@ class BookService {
       author,
       title,
       publisher,
-      keywords,
       language,
       yearFrom,
       yearTo,
@@ -123,7 +122,7 @@ class BookService {
       const olSubject = category ? getOpenLibrarySubject(category) : null;
       
       // Check if we have any search parameters
-      const hasSearchParams = query || title || author || publisher || keywords || 
+      const hasSearchParams = query || title || author || publisher || 
                              category || language || yearFrom || yearTo;
       
       // If sorting by rating, we need to fetch more books to sort globally
@@ -139,7 +138,7 @@ class BookService {
       
       // Create cache key from search parameters (including sortBy)
       const searchParams = JSON.stringify({
-        query, page: cachePage, limit: cacheLimit, category, author, title, publisher, keywords, language, yearFrom, yearTo, sortBy
+        query, page: cachePage, limit: cacheLimit, category, author, title, publisher, language, yearFrom, yearTo, sortBy
       });
       const cacheKey = `search:${Buffer.from(searchParams).toString('base64')}`;
       
@@ -214,20 +213,20 @@ class BookService {
         
         return {
           data: booksWithRatings,
-          total: olResults.total || 0,
-        };
-      }
+            total: olResults.total || 0,
+          };
+        } 
 
       // Use unified searchBooks method for all cases
       // It handles all combinations of parameters correctly
-      const olResults = await openLibraryService.searchBooks(query || keywords || null, {
+      const olResults = await openLibraryService.searchBooks(query || null, {
         page: fetchPage,
         limit: fetchLimit,
-        language,
-        subject: olSubject,
-        author,
-        title,
-        publisher,
+            language,
+            subject: olSubject,
+            author,
+            title,
+            publisher,
         yearFrom,
         yearTo,
       });
@@ -288,14 +287,14 @@ class BookService {
       }
       
       return result;
-    } catch (error) {
-      console.error('Open Library search failed:', error.message);
+      } catch (error) {
+        console.error('Open Library search failed:', error.message);
       // Return empty results instead of throwing
       return {
-        data: [],
-        total: 0,
-      };
-    }
+          data: [],
+          total: 0,
+        };
+      }
   }
 
   /**
@@ -391,7 +390,7 @@ class BookService {
           book.openLibraryRatingCount || 0
         );
         
-        return {
+    return {
           ...book,
           averageRating: combinedRatings.averageRating,
           ratingCount: combinedRatings.ratingCount,

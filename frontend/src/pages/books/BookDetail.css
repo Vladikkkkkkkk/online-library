@@ -32,9 +32,33 @@
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  margin-bottom: 2rem;
+  padding: 0;
+  font: inherit;
+  transition: color 0.2s;
+}
+
+.book-detail__back:hover {
+  color: var(--color-primary);
+}
+
+.book-detail__back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: none;
+  border: none;
+  cursor: pointer;
   color: var(--color-text-muted);
   text-decoration: none;
   margin-bottom: 2rem;
+  padding: 0;
+  font: inherit;
   transition: color 0.2s;
 }
 
@@ -151,8 +175,15 @@
 
 .book-detail__actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 1rem;
   margin-bottom: 2rem;
+  align-items: center;
+}
+
+.book-detail__actions .btn {
+  flex: 0 1 auto;
+  min-width: auto;
 }
 
 .book-detail__external-links {

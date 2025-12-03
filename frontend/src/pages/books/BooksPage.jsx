@@ -21,7 +21,6 @@ const BooksPage = () => {
     title: searchParams.get('title') || '',
     author: searchParams.get('author') || '',
     publisher: searchParams.get('publisher') || '',
-    keywords: searchParams.get('keywords') || '',
     yearFrom: searchParams.get('yearFrom') || '',
     yearTo: searchParams.get('yearTo') || '',
     sortBy: searchParams.get('sortBy') || 'relevance',
@@ -70,7 +69,6 @@ const BooksPage = () => {
       title: '',
       author: '',
       publisher: '',
-      keywords: '',
       yearFrom: '',
       yearTo: '',
     });
@@ -78,14 +76,21 @@ const BooksPage = () => {
   };
 
   const hasActiveFilters = filters.category || filters.language || 
-    filters.title || filters.author || filters.publisher || filters.keywords || 
+    filters.title || filters.author || filters.publisher || 
     filters.yearFrom || filters.yearTo;
 
   return (
     <div className="books-page">
       <div className="books-page__container">
         <header className="books-page__header">
-          {filters.category ? (
+          {filters.author ? (
+            <>
+              <h1>{decodeURIComponent(filters.author)}</h1>
+              <p>
+                {t('books.authorBooks', { author: decodeURIComponent(filters.author) }) || `Книги автора "${decodeURIComponent(filters.author)}"`}
+              </p>
+            </>
+          ) : filters.category ? (
             <>
               <h1>
                 {categories.find(c => c.slug === filters.category)?.nameUk || 
@@ -206,16 +211,6 @@ const BooksPage = () => {
             </div>
 
             <div className="books-page__filter-group">
-              <label>{t('books.keywords') || 'Keywords'}</label>
-              <input
-                type="text"
-                placeholder={t('books.keywordsPlaceholder') || 'Enter keywords'}
-                value={filters.keywords}
-                onChange={(e) => handleFilterChange('keywords', e.target.value)}
-              />
-            </div>
-
-            <div className="books-page__filter-group">
               <label>{t('books.publishYear') || 'Publish Year (From)'}</label>
               <input
                 type="number"
@@ -223,7 +218,7 @@ const BooksPage = () => {
                 value={filters.yearFrom}
                 onChange={(e) => handleFilterChange('yearFrom', e.target.value)}
                 min="1000"
-                max="9999"
+                max={new Date().getFullYear()}
               />
             </div>
 
@@ -235,7 +230,7 @@ const BooksPage = () => {
                 value={filters.yearTo}
                 onChange={(e) => handleFilterChange('yearTo', e.target.value)}
                 min="1000"
-                max="9999"
+                max={new Date().getFullYear()}
               />
             </div>
 

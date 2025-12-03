@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeft, Heart, BookOpen, Calendar, Globe, User, ExternalLink, Bookmark } from 'lucide-react';
 import { useBook } from '../../hooks';
@@ -14,6 +14,7 @@ const DEFAULT_COVER = 'https://via.placeholder.com/300x400/e0e0e0/666666?text=No
 
 const BookDetail = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const { isAuthenticated } = useAuthStore();
   const { t } = useTranslation();
   const [showPlaylistModal, setShowPlaylistModal] = useState(false);
@@ -46,14 +47,12 @@ const BookDetail = () => {
   if (!book) {
     return (
       <div className="book-detail__not-found">
-        <h2>Book Not Found</h2>
-        <p>The book you're looking for doesn't exist.</p>
-        <Link to="/books">
-          <Button>
-            <ArrowLeft size={18} />
-            Back to Books
-          </Button>
-        </Link>
+        <h2>{t('books.bookNotFound')}</h2>
+        <p>{t('books.bookNotFoundDesc')}</p>
+        <Button onClick={() => navigate(-1)}>
+          <ArrowLeft size={18} />
+          {t('books.backToBooks')}
+        </Button>
       </div>
     );
   }
@@ -76,10 +75,13 @@ const BookDetail = () => {
   return (
     <div className="book-detail">
       <div className="book-detail__container">
-        <Link to="/books" className="book-detail__back">
+        <button 
+          onClick={() => navigate(-1)} 
+          className="book-detail__back"
+        >
           <ArrowLeft size={18} />
-          Back to Books
-        </Link>
+          {t('books.backToBooks')}
+        </button>
 
         <div className="book-detail__content">
           <div className="book-detail__cover">
@@ -112,7 +114,7 @@ const BookDetail = () => {
                     </span>
                   ))
                 ) : (
-                  'Unknown Author'
+                  t('books.unknownAuthor')
                 )}
               </div>
             </div>
@@ -133,7 +135,7 @@ const BookDetail = () => {
               {book.pageCount && (
                 <span className="book-detail__meta-item">
                   <BookOpen size={16} />
-                  {book.pageCount} pages
+                  {book.pageCount} {t('books.pages')}
                 </span>
               )}
             </div>
@@ -150,7 +152,7 @@ const BookDetail = () => {
 
             {book.description && (
               <div className="book-detail__description">
-                <h3>Description</h3>
+                <h3>{t('books.description')}</h3>
                 <p>{book.description}</p>
               </div>
             )}
@@ -172,7 +174,7 @@ const BookDetail = () => {
                     onClick={() => setShowPlaylistModal(true)}
                   >
                     <Bookmark size={18} />
-                    Додати до списку
+                    {t('books.addToPlaylist')}
                   </Button>
                 </>
               )}
@@ -205,13 +207,13 @@ const BookDetail = () => {
 
             {book.isbn && (
               <p className="book-detail__isbn">
-                <strong>ISBN:</strong> {book.isbn}
+                <strong>{t('books.isbn')}:</strong> {book.isbn}
               </p>
             )}
 
             {book.publisher && (
               <p className="book-detail__publisher">
-                <strong>Publisher:</strong> {Array.isArray(book.publisher) ? book.publisher[0] : book.publisher}
+                <strong>{t('books.publisherLabel')}:</strong> {Array.isArray(book.publisher) ? book.publisher[0] : book.publisher}
               </p>
             )}
           </div>
