@@ -12,7 +12,7 @@ const Dashboard = () => {
     staleTime: 5 * 60 * 1000,
   });
 
-  // Handle both response structures: {success: true, data: {...}} or direct data
+
   const stats = statsData?.data || statsData || {};
 
   if (isLoading) {
@@ -32,7 +32,7 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Stats Grid */}
+      {}
       <div className="admin-stats">
         <div className="admin-stat-card">
           <div className="admin-stat-card__icon admin-stat-card__icon--users">
@@ -55,7 +55,7 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Quick Actions */}
+      {}
       <div className="admin-section">
         <h2 className="admin-section__title">Швидкі дії</h2>
         <div className="admin-quick-actions">
@@ -66,7 +66,7 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Recent Activity */}
+      {}
       <div className="admin-section">
         <h2 className="admin-section__title">Остання активність</h2>
         <div className="admin-activity">

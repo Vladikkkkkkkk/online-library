@@ -14,7 +14,7 @@ const ReviewSection = ({ openLibraryId }) => {
   const [editingReview, setEditingReview] = useState(null);
 
   const { data: reviewsData, isLoading } = useBookReviews(openLibraryId);
-  // Only fetch user review for authenticated users
+
   const { data: userReviewData } = useUserReview(openLibraryId, { enabled: isAuthenticated });
   const createOrUpdateReview = useCreateOrUpdateReview();
   const deleteReview = useDeleteReview();
@@ -80,7 +80,7 @@ const ReviewSection = ({ openLibraryId }) => {
         )}
       </div>
 
-      {/* User's Review */}
+      {}
       {isAuthenticated && (
         <div className="review-section__user-review">
           {userReview ? (
@@ -137,7 +137,7 @@ const ReviewSection = ({ openLibraryId }) => {
         </div>
       )}
 
-      {/* Other Reviews */}
+      {}
       {reviews.length > 0 && (
         <div className="review-section__reviews">
           <h3>{t('books.allReviews')} ({reviews.length})</h3>
@@ -186,7 +186,7 @@ const ReviewSection = ({ openLibraryId }) => {
           </p>
         </div>
       )}
-      
+
       {reviews.length === 0 && isAuthenticated && !showForm && stats.averageRating && (
         <div className="review-section__empty">
           <p>{t('books.noWrittenReviews')}</p>
@@ -210,7 +210,7 @@ const ReviewForm = ({ review, onSubmit, onCancel, isLoading }) => {
     }
     onSubmit({ rating, title: title.trim() || null, comment: comment.trim() || null });
   };
-  
+
   return (
     <form className="review-form" onSubmit={handleSubmit}>
       <div className="review-form__rating">

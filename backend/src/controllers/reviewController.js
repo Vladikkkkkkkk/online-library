@@ -1,15 +1,7 @@
 const reviewService = require('../services/reviewService');
 const asyncHandler = require('../utils/asyncHandler');
 
-/**
- * Review Controller - handles review-related routes
- */
 
-/**
- * @desc    Get reviews for a book
- * @route   GET /api/books/:openLibraryId/reviews
- * @access  Public
- */
 const getBookReviews = asyncHandler(async (req, res) => {
   const { openLibraryId } = req.params;
   const { page, limit } = req.query;
@@ -25,11 +17,7 @@ const getBookReviews = asyncHandler(async (req, res) => {
   });
 });
 
-/**
- * @desc    Get user's review for a book
- * @route   GET /api/books/:openLibraryId/reviews/my
- * @access  Private
- */
+
 const getUserReview = asyncHandler(async (req, res) => {
   const { openLibraryId } = req.params;
 
@@ -41,11 +29,7 @@ const getUserReview = asyncHandler(async (req, res) => {
   });
 });
 
-/**
- * @desc    Create or update review
- * @route   POST /api/books/:openLibraryId/reviews
- * @access  Private
- */
+
 const createOrUpdateReview = asyncHandler(async (req, res) => {
   const { openLibraryId } = req.params;
 
@@ -62,11 +46,7 @@ const createOrUpdateReview = asyncHandler(async (req, res) => {
   });
 });
 
-/**
- * @desc    Delete review
- * @route   DELETE /api/books/:openLibraryId/reviews
- * @access  Private
- */
+
 const deleteReview = asyncHandler(async (req, res) => {
   const { openLibraryId } = req.params;
 
@@ -78,11 +58,7 @@ const deleteReview = asyncHandler(async (req, res) => {
   });
 });
 
-/**
- * @desc    Get user's reviews
- * @route   GET /api/reviews/my
- * @access  Private
- */
+
 const getUserReviews = asyncHandler(async (req, res) => {
   const { page, limit } = req.query;
 

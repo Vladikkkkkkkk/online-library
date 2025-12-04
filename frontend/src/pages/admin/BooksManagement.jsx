@@ -23,8 +23,8 @@ const BooksManagement = () => {
       q: searchQuery || undefined
     }),
   });
-  
-  // Log for debugging
+
+
   if (error) {
     console.error('BooksManagement error:', error);
   }
@@ -40,13 +40,12 @@ const BooksManagement = () => {
     },
   });
 
-  // Handle response structure from getAll endpoint
-  // Response: { success: true, data: [...books], pagination: {...} }
+
   const books = booksData?.data || [];
   const totalPages = booksData?.pagination?.totalPages || 1;
   const pagination = { totalPages };
-  
-  // Debug logging
+
+
   console.log('BooksManagement - Full response:', booksData);
   console.log('BooksManagement - Books array:', books);
   console.log('BooksManagement - Total pages:', totalPages);
@@ -76,7 +75,7 @@ const BooksManagement = () => {
         </div>
       </div>
 
-      {/* Filters */}
+      {}
       <form onSubmit={handleSearch} className="admin-books__filters">
         <div className="admin-books__search">
           <Search size={18} className="admin-books__search-icon" />
@@ -93,7 +92,7 @@ const BooksManagement = () => {
         </Button>
       </form>
 
-      {/* Table */}
+      {}
       {isLoading ? (
         <div className="admin-loading">
           <Loader size="lg" />
@@ -180,7 +179,7 @@ const BooksManagement = () => {
             </table>
           </div>
 
-          {/* Pagination */}
+          {}
           {pagination.totalPages > 1 && (
             <div className="admin-pagination">
               <button

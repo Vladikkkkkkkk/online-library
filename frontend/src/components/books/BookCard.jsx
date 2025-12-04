@@ -25,7 +25,7 @@ const BookCard = ({ book, onSave, onRemove, isSaved = false, showActions = true 
     languages,
   } = book;
 
-  // All books are now from Open Library, use openLibraryId or id
+
   const bookLink = `/books/${openLibraryId || id}`;
 
   const authorNames = authors.map(a => a.name || a).join(', ');
@@ -90,7 +90,7 @@ const BookCard = ({ book, onSave, onRemove, isSaved = false, showActions = true 
                   {(typeof language === 'string' 
                     ? (language.length === 2 
                         ? language.toUpperCase() 
-                        : language.replace(/\/languages\//, '').substring(0, 3).toUpperCase())
+                        : language.replace(/^\/languages\//, '').toUpperCase())
                     : (languages && languages.length > 0
                         ? (languages[0].length === 2 ? languages[0].toUpperCase() : languages[0].substring(0, 3).toUpperCase())
                         : null))}
@@ -117,7 +117,7 @@ const BookCard = ({ book, onSave, onRemove, isSaved = false, showActions = true 
           )}
         </div>
       </Link>
-      
+
       {showActions && (
         <div className="book-card__actions">
           {onSave && (

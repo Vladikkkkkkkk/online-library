@@ -3,19 +3,13 @@ const { prisma } = require('../config/database');
 const { generateToken } = require('../middleware/auth');
 const ApiError = require('../utils/ApiError');
 
-/**
- * Authentication Service
- */
+
 class AuthService {
-  /**
-   * Register a new user
-   * @param {object} userData - User data (email, password, firstName, lastName)
-   * @returns {Promise<object>} - User and token
-   */
+
   async register(userData) {
     const { email, password, firstName, lastName } = userData;
 
-    // Check if user already exists
+
     const existingUser = await prisma.user.findUnique({
       where: { email: email.toLowerCase() },
     });
@@ -24,11 +18,11 @@ class AuthService {
       throw ApiError.conflict('User with this email already exists');
     }
 
-    // Hash password
+
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Create user
+
     const user = await prisma.user.create({
       data: {
         email: email.toLowerCase(),
@@ -47,20 +41,15 @@ class AuthService {
       },
     });
 
-    // Generate token
+
     const token = generateToken(user.id);
 
     return { user, token };
   }
 
-  /**
-   * Login user
-   * @param {string} email - User email
-   * @param {string} password - User password
-   * @returns {Promise<object>} - User and token
-   */
+
   async login(email, password) {
-    // Find user
+
     const user = await prisma.user.findUnique({
       where: { email: email.toLowerCase() },
     });
@@ -69,32 +58,28 @@ class AuthService {
       throw ApiError.unauthorized('Invalid credentials');
     }
 
-    // Check if user is blocked
+
     if (user.isBlocked) {
       throw ApiError.forbidden('Ваш акаунт заблоковано. Зверніться до адміністратора для отримання допомоги.');
     }
 
-    // Check password
+
     const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
       throw ApiError.unauthorized('Invalid credentials');
     }
 
-    // Generate token
+
     const token = generateToken(user.id);
 
-    // Return user without password
+
     const { password: _, ...userWithoutPassword } = user;
 
     return { user: userWithoutPassword, token };
   }
 
-  /**
-   * Get user profile
-   * @param {string} userId - User ID
-   * @returns {Promise<object>} - User profile
-   */
+
   async getProfile(userId) {
     const user = await prisma.user.findUnique({
       where: { id: userId },
@@ -118,12 +103,7 @@ class AuthService {
     return user;
   }
 
-  /**
-   * Update user profile
-   * @param {string} userId - User ID
-   * @param {object} updateData - Data to update
-   * @returns {Promise<object>} - Updated user
-   */
+
   async updateProfile(userId, updateData) {
     const { firstName, lastName, avatar } = updateData;
 
@@ -148,12 +128,7 @@ class AuthService {
     return user;
   }
 
-  /**
-   * Change user password
-   * @param {string} userId - User ID
-   * @param {string} currentPassword - Current password
-   * @param {string} newPassword - New password
-   */
+
   async changePassword(userId, currentPassword, newPassword) {
     const user = await prisma.user.findUnique({
       where: { id: userId },
@@ -163,18 +138,18 @@ class AuthService {
       throw ApiError.notFound('User not found');
     }
 
-    // Verify current password
+
     const isMatch = await bcrypt.compare(currentPassword, user.password);
 
     if (!isMatch) {
       throw ApiError.badRequest('Current password is incorrect');
     }
 
-    // Hash new password
+
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(newPassword, salt);
 
-    // Update password
+
     await prisma.user.update({
       where: { id: userId },
       data: { password: hashedPassword },

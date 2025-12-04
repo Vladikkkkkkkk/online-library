@@ -20,7 +20,7 @@ const BookDetail = () => {
   const [showPlaylistModal, setShowPlaylistModal] = useState(false);
 
   const { data: bookData, isLoading } = useBook(id);
-  // Only check book status for authenticated users
+
   const { data: statusData } = useBookStatus(id, { enabled: isAuthenticated });
   const saveBook = useSaveBook();
   const removeBook = useRemoveBook();
@@ -57,17 +57,17 @@ const BookDetail = () => {
     );
   }
 
-  // Get authors list - can be array of objects or strings
+
   const authorsList = book.authors || [];
   const authorNames = authorsList.map(a => {
     if (typeof a === 'string') return a;
     return a?.name || a;
   }).filter(Boolean);
-  
-  // Open Library returns subjects as array of strings, not objects
+
+
   const categories = book.subjects || book.categories || [];
-  
-  // Normalize categories - handle both string arrays and object arrays
+
+
   const normalizedCategories = categories.map(cat => 
     typeof cat === 'string' ? cat : (cat?.name || cat)
   ).filter(Boolean);
@@ -96,7 +96,7 @@ const BookDetail = () => {
 
           <div className="book-detail__info">
             <h1 className="book-detail__title">{book.title}</h1>
-            
+
             <div className="book-detail__authors">
               <User size={18} />
               <div className="book-detail__authors-list">
@@ -158,7 +158,7 @@ const BookDetail = () => {
             )}
 
             <div className="book-detail__actions">
-              {/* Save to Library button - available for all authenticated users */}
+              {}
               {isAuthenticated && (
                 <>
                   <Button
@@ -179,7 +179,7 @@ const BookDetail = () => {
                 </>
               )}
 
-              {/* External links for Open Library */}
+              {}
               <div className="book-detail__external-links">
                 <a
                   href={`https://openlibrary.org/works/${id}`}
@@ -193,7 +193,7 @@ const BookDetail = () => {
               </div>
             </div>
 
-            {/* Add to Playlist Modal */}
+            {}
             {showPlaylistModal && (
               <div className="book-detail__modal-overlay" onClick={() => setShowPlaylistModal(false)}>
                 <div className="book-detail__modal-content" onClick={(e) => e.stopPropagation()}>
@@ -219,7 +219,7 @@ const BookDetail = () => {
           </div>
         </div>
 
-        {/* Reviews Section */}
+        {}
         <ReviewSection openLibraryId={id} />
       </div>
     </div>

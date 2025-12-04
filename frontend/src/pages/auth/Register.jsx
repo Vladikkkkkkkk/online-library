@@ -29,7 +29,7 @@ const Register = () => {
       firstName: data.firstName,
       lastName: data.lastName,
     });
-    
+
     if (result.success) {
       toast.success('Account created successfully!');
       navigate('/');

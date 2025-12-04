@@ -11,7 +11,7 @@ const Settings = () => {
   const { user, updateProfile, changePassword, isLoading } = useAuthStore();
   const [activeTab, setActiveTab] = useState('profile');
 
-  // Profile form
+
   const {
     register: registerProfile,
     handleSubmit: handleProfileSubmit,
@@ -24,7 +24,7 @@ const Settings = () => {
     },
   });
 
-  // Password form
+
   const {
     register: registerPassword,
     handleSubmit: handlePasswordSubmit,
@@ -64,7 +64,7 @@ const Settings = () => {
 
         <h1 className="settings__title">Налаштування</h1>
 
-        {/* Tabs */}
+        {}
         <div className="settings__tabs">
           <button
             className={`settings__tab ${activeTab === 'profile' ? 'settings__tab--active' : ''}`}
@@ -82,7 +82,7 @@ const Settings = () => {
           </button>
         </div>
 
-        {/* Profile Tab */}
+        {}
         {activeTab === 'profile' && (
           <div className="settings__panel">
             <h2 className="settings__panel-title">Редагування профілю</h2>

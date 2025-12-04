@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { reviewsApi } from '../api/reviews';
 import toast from 'react-hot-toast';
 
-// Get reviews for a book
+
 export const useBookReviews = (openLibraryId, params) => {
   return useQuery({
     queryKey: ['reviews', 'book', openLibraryId, params],
@@ -12,18 +12,18 @@ export const useBookReviews = (openLibraryId, params) => {
   });
 };
 
-// Get user's review for a book
+
 export const useUserReview = (openLibraryId, options = {}) => {
   return useQuery({
     queryKey: ['review', 'user', openLibraryId],
     queryFn: () => reviewsApi.getUserReview(openLibraryId),
     enabled: !!openLibraryId && (options.enabled !== false),
     staleTime: 2 * 60 * 1000,
-    retry: false, // Don't retry on 401 errors
+    retry: false, 
   });
 };
 
-// Create or update review
+
 export const useCreateOrUpdateReview = () => {
   const queryClient = useQueryClient();
 
@@ -41,7 +41,7 @@ export const useCreateOrUpdateReview = () => {
   });
 };
 
-// Delete review
+
 export const useDeleteReview = () => {
   const queryClient = useQueryClient();
 
@@ -59,7 +59,7 @@ export const useDeleteReview = () => {
   });
 };
 
-// Get user's reviews
+
 export const useUserReviews = (params) => {
   return useQuery({
     queryKey: ['reviews', 'user', params],

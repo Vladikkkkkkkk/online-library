@@ -6,7 +6,7 @@ import { Layout } from './components/layout';
 import useAuthStore from './context/authStore';
 import { Loader } from './components/common';
 
-// Pages
+
 import Home from './pages/Home';
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
@@ -22,7 +22,7 @@ import NotFound from './pages/NotFound';
 import './styles/index.css';
 import { queryClient } from './config/queryClient';
 
-// Protected Route wrapper
+
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, isLoading } = useAuthStore();
 
@@ -37,7 +37,7 @@ const ProtectedRoute = ({ children }) => {
   return children;
 };
 
-// Admin Route wrapper
+
 const AdminRoute = ({ children }) => {
   const { isAuthenticated, isAdmin, isLoading } = useAuthStore();
 
@@ -52,7 +52,7 @@ const AdminRoute = ({ children }) => {
   return children;
 };
 
-// Guest Route wrapper (redirect if authenticated)
+
 const GuestRoute = ({ children }) => {
   const { isAuthenticated } = useAuthStore();
 
@@ -74,7 +74,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <Routes>
-          {/* Public routes with layout */}
+          {}
           <Route path="/" element={<Layout />}>
             <Route index element={<Home />} />
             <Route path="books" element={<BooksPage />} />
@@ -83,7 +83,7 @@ function App() {
             <Route path="categories/:id" element={<BooksPage />} />
           </Route>
 
-          {/* Auth routes (guest only) */}
+          {}
           <Route
             path="/login"
             element={
@@ -101,7 +101,7 @@ function App() {
             }
           />
 
-          {/* Protected user routes */}
+          {}
           <Route path="/" element={<Layout />}>
             <Route
               path="library"
@@ -145,7 +145,7 @@ function App() {
             />
           </Route>
 
-          {/* Admin routes */}
+          {}
           <Route path="/" element={<Layout />}>
             <Route
               path="admin"
@@ -165,7 +165,7 @@ function App() {
             />
           </Route>
 
-          {/* 404 */}
+          {}
           <Route path="*" element={<NotFound />} />
         </Routes>
 

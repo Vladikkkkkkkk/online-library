@@ -36,7 +36,7 @@ const Profile = () => {
   return (
     <div className="profile">
       <div className="profile__container">
-        {/* Profile Header */}
+        {}
         <div className="profile__header">
           <div className="profile__avatar">
             {user.avatar ? (
@@ -77,7 +77,7 @@ const Profile = () => {
           </div>
         </div>
 
-        {/* Stats Section */}
+        {}
         <div className="profile__stats">
           <h2 className="profile__section-title">Статистика</h2>
           {statsLoading ? (
@@ -117,7 +117,7 @@ const Profile = () => {
           )}
         </div>
 
-        {/* Quick Links */}
+        {}
         <div className="profile__links">
           <h2 className="profile__section-title">Швидкі посилання</h2>
           <div className="profile__links-grid">

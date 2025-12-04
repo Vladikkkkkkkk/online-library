@@ -1,13 +1,13 @@
 import apiClient from './client';
 
 export const adminApi = {
-  // Dashboard stats
+
   getStats: async () => {
     const response = await apiClient.get('/admin/stats');
     return response.data;
   },
 
-  // Users
+
   getUsers: async (params) => {
     const response = await apiClient.get('/admin/users', { params });
     return response.data;
@@ -28,7 +28,7 @@ export const adminApi = {
     return response.data;
   },
 
-  // Authors
+
   getAuthors: async (params) => {
     const response = await apiClient.get('/admin/authors', { params });
     return response.data;
@@ -49,7 +49,7 @@ export const adminApi = {
     return response.data;
   },
 
-  // Books
+
   createBook: async (data) => {
     const response = await apiClient.post('/books', data);
     return response.data;

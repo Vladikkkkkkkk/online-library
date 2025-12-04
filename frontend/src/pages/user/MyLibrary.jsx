@@ -20,11 +20,11 @@ const MyLibrary = () => {
   const pagination = libraryData?.pagination || {};
   const totalBooks = pagination?.totalItems || 0;
 
-  // Filter books by search query
+
   const filteredBooks = savedBooks.filter((item) => {
     const book = item.book;
     if (!book) return false;
-    
+
     const title = book.title?.toLowerCase() || '';
     const authors = book.authors?.map(a => (typeof a === 'string' ? a : a.name)?.toLowerCase() || '').join(' ') || '';
     const query = searchQuery.toLowerCase();
@@ -45,12 +45,12 @@ const MyLibrary = () => {
     }
   };
 
-  // Transform saved books to match BookGrid format
+
   const booksForGrid = filteredBooks
     .filter(item => item.book && item.book.title && item.book.title !== 'Book unavailable' && item.book.title !== 'Loading...')
     .map((item) => ({
       ...item.book,
-      id: item.openLibraryId || item.book.id, // Use openLibraryId as primary ID
+      id: item.openLibraryId || item.book.id, 
       openLibraryId: item.openLibraryId,
       savedAt: item.savedAt,
     }));
@@ -58,7 +58,7 @@ const MyLibrary = () => {
   return (
     <div className="my-library">
       <div className="my-library__container">
-        {/* Header */}
+        {}
         <div className="my-library__header">
           <div className="my-library__title-section">
             <h1 className="my-library__title">
@@ -81,7 +81,7 @@ const MyLibrary = () => {
                 value={searchQuery}
                 onChange={(e) => {
                   setSearchQuery(e.target.value);
-                  setPage(1); // Reset to first page when searching
+                  setPage(1); 
                 }}
                 className="my-library__search-input"
               />
@@ -89,7 +89,7 @@ const MyLibrary = () => {
           )}
         </div>
 
-        {/* Content */}
+        {}
         {isLoading ? (
           <div className="my-library__loading">
             <Loader size="lg" />
@@ -133,7 +133,7 @@ const MyLibrary = () => {
               />
             </div>
 
-            {/* Pagination */}
+            {}
             {!searchQuery && totalBooks > limit && (
               <div className="my-library__pagination">
                 <Button
@@ -158,7 +158,7 @@ const MyLibrary = () => {
           </>
         )}
 
-        {/* Info Section */}
+        {}
         {totalBooks > 0 && (
           <div className="my-library__info">
             <h3>💡 {t('library.tip')}</h3>
@@ -169,7 +169,7 @@ const MyLibrary = () => {
         )}
       </div>
 
-      {/* Delete Confirmation Modal */}
+      {}
       {bookToRemove && (
         <ConfirmModal
           isOpen={!!bookToRemove}

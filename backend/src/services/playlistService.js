@@ -7,23 +7,16 @@ const cache = require('../utils/cache');
 const axios = require('axios');
 const config = require('../config');
 
-/**
- * Playlist Service - manages user playlists
- */
+
 class PlaylistService {
-  /**
-   * Get user's playlists
-   * @param {string} userId - User ID
-   * @param {object} params - Pagination params
-   * @returns {Promise<object>} - Playlists with pagination
-   */
+
   async getUserPlaylists(userId, params = {}) {
     const { page = 1, limit = 10, includePublic = false } = params;
     const { skip, take } = paginate(page, limit);
 
     const where = { userId };
     if (includePublic) {
-      // Include public playlists from other users
+
       delete where.userId;
       where.OR = [
         { userId },
@@ -39,7 +32,7 @@ class PlaylistService {
         include: {
           books: {
             orderBy: { order: 'asc' },
-            take: 1, // Just to get count
+            take: 1, 
           },
           user: {
             select: {
@@ -55,7 +48,7 @@ class PlaylistService {
       prisma.playlist.count({ where }),
     ]);
 
-    // Get book count for each playlist
+
     const playlistsWithCounts = await Promise.all(
       playlists.map(async (playlist) => {
         const bookCount = await prisma.playlistBook.count({
@@ -78,13 +71,7 @@ class PlaylistService {
     return paginationResponse(playlistsWithCounts, total, page, limit);
   }
 
-  /**
-   * Get playlist by ID with books
-   * @param {string} playlistId - Playlist ID
-   * @param {string} userId - User ID (for checking access)
-   * @param {object} params - Pagination params for books
-   * @returns {Promise<object>} - Playlist with books
-   */
+
   async getPlaylistById(playlistId, userId = null, params = {}) {
     const playlist = await prisma.playlist.findUnique({
       where: { id: playlistId },
@@ -104,17 +91,17 @@ class PlaylistService {
       throw ApiError.notFound('Playlist not found');
     }
 
-    // Check if user has access (owner or public)
+
     if (userId && playlist.userId !== userId && !playlist.isPublic) {
       throw ApiError.forbidden('You do not have access to this playlist');
     }
 
-    // Get total book count
+
     const totalBooks = await prisma.playlistBook.count({
       where: { playlistId },
     });
 
-    // Get books in playlist with pagination
+
     const { page = 1, limit = 10 } = params;
     const { skip, take } = paginate(page, limit);
 
@@ -125,13 +112,13 @@ class PlaylistService {
       take,
     });
 
-    // Get all book IDs
+
     const bookIds = playlistBooks.map(pb => pb.openLibraryId);
-    
-    // Check cache for all books first
+
+
     const cachedBooksMap = {};
     const uncachedBookIds = [];
-    
+
     for (const bookId of bookIds) {
       const bookCacheKey = `book:${bookId}`;
       const cachedBook = await cache.get(bookCacheKey);
@@ -141,32 +128,32 @@ class PlaylistService {
         uncachedBookIds.push(bookId);
       }
     }
-    
-    // Batch fetch missing books using search API (much faster than individual requests)
+
+
     const fetchedBooksMap = {};
     if (uncachedBookIds.length > 0) {
       try {
-        // Use batch search with keys to fetch multiple books at once
+
         const keys = uncachedBookIds.map(id => `key:/works/${id}`).join(' OR ');
         const batchResponse = await axios.get(
           `${config.openLibrary.baseUrl}/search.json?q=(${keys})&fields=key,title,author_name,first_publish_year,isbn,cover_i,subject,language,number_of_pages_median,publisher,has_fulltext,ia,ratings_count,ratings_average&limit=${uncachedBookIds.length}`,
-          { timeout: 10000 } // 10 second timeout for batch request
+          { timeout: 10000 } 
         );
-        
+
         if (batchResponse.data.docs) {
-          // Process batch results
+
           for (const doc of batchResponse.data.docs) {
             const id = doc.key?.replace('/works/', '');
             if (id && uncachedBookIds.includes(id)) {
-              // Get cover URL - try cover_i first, then ISBN as fallback
+
               let coverUrl = null;
               if (doc.cover_i) {
                 coverUrl = `${config.openLibrary.coversUrl}/b/id/${doc.cover_i}-M.jpg`;
               } else if (doc.isbn && doc.isbn[0]) {
-                // Try ISBN-based cover as fallback
+
                 coverUrl = `${config.openLibrary.coversUrl}/b/isbn/${doc.isbn[0]}-M.jpg`;
               }
-              
+
               fetchedBooksMap[id] = {
                 id,
                 title: doc.title || 'Unknown Title',
@@ -178,11 +165,11 @@ class PlaylistService {
                 subjects: doc.subject?.slice(0, 5) || [],
                 openLibraryRating: doc.ratings_average ? Number(doc.ratings_average) : null,
                 openLibraryRatingCount: doc.ratings_count || 0,
-                // Note: averageRating and ratingCount should ALWAYS come from combineRatings, not from cache
+
               };
-              
-              // Cache the basic book data (without combined ratings - they come from combineRatings)
-              await cache.set(`book:${id}`, fetchedBooksMap[id], 1800); // 30 minutes
+
+
+              await cache.set(`book:${id}`, fetchedBooksMap[id], 1800); 
             }
           }
         }
@@ -190,8 +177,8 @@ class PlaylistService {
         console.error('Batch fetch error in playlists:', batchError.message);
       }
     }
-    
-    // Fetch full details in parallel for books that need them (limit to first 6)
+
+
     const booksNeedingFullDetails = playlistBooks
       .map((pb, index) => ({ pb, index }))
       .filter(({ pb }) => {
@@ -199,13 +186,13 @@ class PlaylistService {
         const bookData = cachedBooksMap[bookId] || fetchedBooksMap[bookId];
         return !bookData || !bookData.description;
       })
-      .slice(0, 6); // Limit to first 6 books
-    
-    // Fetch full details in parallel
+      .slice(0, 6); 
+
+
     const fullDetailsPromises = booksNeedingFullDetails.map(async ({ pb }) => {
       const bookId = pb.openLibraryId;
       const existingData = cachedBooksMap[bookId] || fetchedBooksMap[bookId];
-      
+
       try {
         const fullBookData = await Promise.race([
           openLibraryService.getBookById(bookId),
@@ -213,27 +200,27 @@ class PlaylistService {
             setTimeout(() => reject(new Error('Timeout')), 8000)
           ),
         ]);
-        
+
         const mergedData = {
           ...(existingData || {}),
           ...fullBookData,
-          // Ensure coverUrl from full details takes priority (usually has better quality -L size)
+
           coverUrl: fullBookData.coverUrl || existingData?.coverUrl || null,
           coverId: fullBookData.coverId || existingData?.coverId || null,
           description: fullBookData.description || '',
           downloadLinks: fullBookData.downloadLinks || [],
         };
-        
-        // Update cache
+
+
         await cache.set(`book:${bookId}`, mergedData, 1800);
-        
+
         return { bookId, data: mergedData };
       } catch (error) {
         console.warn(`Could not fetch full details for ${bookId} in playlist:`, error.message);
         return { bookId, data: existingData };
       }
     });
-    
+
     const fullDetailsResults = await Promise.all(fullDetailsPromises);
     const fullDetailsMap = {};
     fullDetailsResults.forEach(({ bookId, data }) => {
@@ -242,22 +229,22 @@ class PlaylistService {
         fetchedBooksMap[bookId] = data;
       }
     });
-    
-    // Build final books array with combined ratings
+
+
     const books = await Promise.all(
       playlistBooks.map(async (pb) => {
         const bookId = pb.openLibraryId;
         const bookData = fullDetailsMap[bookId] || cachedBooksMap[bookId] || fetchedBooksMap[bookId];
-        
+
         if (bookData) {
-          // Get combined ratings (Open Library + our database)
-          // Always use openLibraryRating/openLibraryRatingCount from cache, never averageRating/ratingCount
+
+
           const combinedRatings = await bookService.combineRatings(
             bookId,
             bookData.openLibraryRating || null,
             bookData.openLibraryRatingCount || 0
           );
-          
+
           return {
             order: pb.order,
             addedAt: pb.addedAt,
@@ -276,8 +263,8 @@ class PlaylistService {
             },
           };
         }
-        
-        // If no data, return placeholder
+
+
         return {
           order: pb.order,
           addedAt: pb.addedAt,
@@ -312,12 +299,7 @@ class PlaylistService {
     };
   }
 
-  /**
-   * Create playlist
-   * @param {string} userId - User ID
-   * @param {object} data - Playlist data
-   * @returns {Promise<object>} - Created playlist
-   */
+
   async createPlaylist(userId, data) {
     const { name, description, isPublic = false } = data;
 
@@ -345,13 +327,7 @@ class PlaylistService {
     };
   }
 
-  /**
-   * Update playlist
-   * @param {string} playlistId - Playlist ID
-   * @param {string} userId - User ID
-   * @param {object} data - Update data
-   * @returns {Promise<object>} - Updated playlist
-   */
+
   async updatePlaylist(playlistId, userId, data) {
     const playlist = await prisma.playlist.findUnique({
       where: { id: playlistId },
@@ -403,11 +379,7 @@ class PlaylistService {
     };
   }
 
-  /**
-   * Delete playlist
-   * @param {string} playlistId - Playlist ID
-   * @param {string} userId - User ID
-   */
+
   async deletePlaylist(playlistId, userId) {
     const playlist = await prisma.playlist.findUnique({
       where: { id: playlistId },
@@ -426,15 +398,9 @@ class PlaylistService {
     });
   }
 
-  /**
-   * Add book to playlist
-   * @param {string} playlistId - Playlist ID
-   * @param {string} userId - User ID
-   * @param {string} openLibraryId - Open Library ID
-   * @returns {Promise<object>} - Added book
-   */
+
   async addBookToPlaylist(playlistId, userId, openLibraryId) {
-    // Verify playlist exists and user owns it
+
     const playlist = await prisma.playlist.findUnique({
       where: { id: playlistId },
     });
@@ -447,14 +413,14 @@ class PlaylistService {
       throw ApiError.forbidden('You can only add books to your own playlists');
     }
 
-    // Verify book exists in Open Library
+
     try {
       await openLibraryService.getBookById(openLibraryId);
     } catch (error) {
       throw ApiError.notFound('Book not found in Open Library');
     }
 
-    // Check if book already in playlist
+
     const existing = await prisma.playlistBook.findFirst({
       where: {
         playlistId,
@@ -466,7 +432,7 @@ class PlaylistService {
       throw ApiError.conflict('Book already in playlist');
     }
 
-    // Get max order for this playlist
+
     const maxOrder = await prisma.playlistBook.aggregate({
       where: { playlistId },
       _max: { order: true },
@@ -490,14 +456,9 @@ class PlaylistService {
     };
   }
 
-  /**
-   * Remove book from playlist
-   * @param {string} playlistId - Playlist ID
-   * @param {string} userId - User ID
-   * @param {string} openLibraryId - Open Library ID
-   */
+
   async removeBookFromPlaylist(playlistId, userId, openLibraryId) {
-    // Verify playlist exists and user owns it
+
     const playlist = await prisma.playlist.findUnique({
       where: { id: playlistId },
     });
@@ -526,14 +487,9 @@ class PlaylistService {
     });
   }
 
-  /**
-   * Reorder books in playlist
-   * @param {string} playlistId - Playlist ID
-   * @param {string} userId - User ID
-   * @param {Array<{openLibraryId: string, order: number}>} orderData - New order
-   */
+
   async reorderPlaylistBooks(playlistId, userId, orderData) {
-    // Verify playlist exists and user owns it
+
     const playlist = await prisma.playlist.findUnique({
       where: { id: playlistId },
     });
@@ -546,7 +502,7 @@ class PlaylistService {
       throw ApiError.forbidden('You can only reorder books in your own playlists');
     }
 
-    // Update order for each book
+
     await prisma.$transaction(
       orderData.map(({ openLibraryId, order }) =>
         prisma.playlistBook.updateMany({

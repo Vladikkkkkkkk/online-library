@@ -1,22 +1,13 @@
 const { redisClient } = require('../config/redis');
 
-/**
- * Cache Service - handles Redis caching operations
- * Gracefully falls back if Redis is unavailable
- */
+
 class CacheService {
-  /**
-   * Check if Redis is available
-   */
+
   isAvailable() {
     return redisClient.status === 'ready';
   }
 
-  /**
-   * Get value from cache
-   * @param {string} key - Cache key
-   * @returns {Promise<any|null>} - Cached value or null
-   */
+
   async get(key) {
     try {
       if (!this.isAvailable()) {
@@ -30,13 +21,7 @@ class CacheService {
     }
   }
 
-  /**
-   * Set value in cache
-   * @param {string} key - Cache key
-   * @param {any} value - Value to cache
-   * @param {number} ttlSeconds - Time to live in seconds
-   * @returns {Promise<boolean>} - Success status
-   */
+
   async set(key, value, ttlSeconds = 3600) {
     try {
       if (!this.isAvailable()) {
@@ -50,11 +35,7 @@ class CacheService {
     }
   }
 
-  /**
-   * Delete key from cache
-   * @param {string} key - Cache key
-   * @returns {Promise<boolean>} - Success status
-   */
+
   async del(key) {
     try {
       if (!this.isAvailable()) {
@@ -68,11 +49,7 @@ class CacheService {
     }
   }
 
-  /**
-   * Delete multiple keys with pattern
-   * @param {string} pattern - Key pattern (e.g., 'book:*')
-   * @returns {Promise<boolean>} - Success status
-   */
+
   async delPattern(pattern) {
     try {
       if (!this.isAvailable()) {
@@ -102,11 +79,7 @@ class CacheService {
     }
   }
 
-  /**
-   * Check if key exists
-   * @param {string} key - Cache key
-   * @returns {Promise<boolean>} - Exists status
-   */
+
   async exists(key) {
     try {
       if (!this.isAvailable()) {
@@ -120,11 +93,7 @@ class CacheService {
     }
   }
 
-  /**
-   * Get multiple keys at once
-   * @param {string[]} keys - Array of cache keys
-   * @returns {Promise<Object>} - Object with key-value pairs
-   */
+
   async mget(keys) {
     try {
       if (!this.isAvailable() || keys.length === 0) {
@@ -148,12 +117,7 @@ class CacheService {
     }
   }
 
-  /**
-   * Set multiple key-value pairs at once
-   * @param {Object} data - Object with key-value pairs
-   * @param {number} ttlSeconds - Time to live in seconds
-   * @returns {Promise<boolean>} - Success status
-   */
+
   async mset(data, ttlSeconds = 3600) {
     try {
       if (!this.isAvailable() || Object.keys(data).length === 0) {

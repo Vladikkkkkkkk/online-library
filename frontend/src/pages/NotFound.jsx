@@ -15,7 +15,7 @@ const NotFound = () => {
           </div>
           <div className="not-found__code">404</div>
         </div>
-        
+
         <h1 className="not-found__title">{t('notFound.subtitle')}</h1>
         <p className="not-found__description">
           {t('notFound.description')}

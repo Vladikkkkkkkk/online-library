@@ -1,15 +1,7 @@
 const playlistService = require('../services/playlistService');
 const asyncHandler = require('../utils/asyncHandler');
 
-/**
- * Playlist Controller - handles playlist-related routes
- */
 
-/**
- * @desc    Get user's playlists
- * @route   GET /api/playlists
- * @access  Private
- */
 const getUserPlaylists = asyncHandler(async (req, res) => {
   const { page, limit, includePublic } = req.query;
 
@@ -25,11 +17,7 @@ const getUserPlaylists = asyncHandler(async (req, res) => {
   });
 });
 
-/**
- * @desc    Get playlist by ID
- * @route   GET /api/playlists/:id
- * @access  Private (or public if playlist is public)
- */
+
 const getPlaylistById = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { page, limit } = req.query;
@@ -45,11 +33,7 @@ const getPlaylistById = asyncHandler(async (req, res) => {
   });
 });
 
-/**
- * @desc    Create playlist
- * @route   POST /api/playlists
- * @access  Private
- */
+
 const createPlaylist = asyncHandler(async (req, res) => {
   const playlist = await playlistService.createPlaylist(req.user.id, req.body);
 
@@ -60,11 +44,7 @@ const createPlaylist = asyncHandler(async (req, res) => {
   });
 });
 
-/**
- * @desc    Update playlist
- * @route   PUT /api/playlists/:id
- * @access  Private
- */
+
 const updatePlaylist = asyncHandler(async (req, res) => {
   const { id } = req.params;
 
@@ -77,11 +57,7 @@ const updatePlaylist = asyncHandler(async (req, res) => {
   });
 });
 
-/**
- * @desc    Delete playlist
- * @route   DELETE /api/playlists/:id
- * @access  Private
- */
+
 const deletePlaylist = asyncHandler(async (req, res) => {
   const { id } = req.params;
 
@@ -93,11 +69,7 @@ const deletePlaylist = asyncHandler(async (req, res) => {
   });
 });
 
-/**
- * @desc    Add book to playlist
- * @route   POST /api/playlists/:id/books
- * @access  Private
- */
+
 const addBookToPlaylist = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { openLibraryId } = req.body;
@@ -118,11 +90,7 @@ const addBookToPlaylist = asyncHandler(async (req, res) => {
   });
 });
 
-/**
- * @desc    Remove book from playlist
- * @route   DELETE /api/playlists/:id/books/:openLibraryId
- * @access  Private
- */
+
 const removeBookFromPlaylist = asyncHandler(async (req, res) => {
   const { id, openLibraryId } = req.params;
 
@@ -134,11 +102,7 @@ const removeBookFromPlaylist = asyncHandler(async (req, res) => {
   });
 });
 
-/**
- * @desc    Reorder books in playlist
- * @route   PUT /api/playlists/:id/books/reorder
- * @access  Private
- */
+
 const reorderPlaylistBooks = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { order } = req.body;

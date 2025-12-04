@@ -1,16 +1,7 @@
 const userLibraryService = require('../services/userLibraryService');
 const asyncHandler = require('../utils/asyncHandler');
 
-/**
- * User Library Controller - handles user's personal library routes
- * Now works only with Open Library books
- */
 
-/**
- * @desc    Get user's saved books
- * @route   GET /api/library
- * @access  Private
- */
 const getSavedBooks = asyncHandler(async (req, res) => {
   const { page, limit } = req.query;
 
@@ -25,11 +16,7 @@ const getSavedBooks = asyncHandler(async (req, res) => {
   });
 });
 
-/**
- * @desc    Save book to library
- * @route   POST /api/library/:openLibraryId
- * @access  Private
- */
+
 const saveBook = asyncHandler(async (req, res) => {
   const { openLibraryId } = req.params;
 
@@ -42,11 +29,7 @@ const saveBook = asyncHandler(async (req, res) => {
   });
 });
 
-/**
- * @desc    Remove book from library
- * @route   DELETE /api/library/:openLibraryId
- * @access  Private
- */
+
 const removeBook = asyncHandler(async (req, res) => {
   const { openLibraryId } = req.params;
 
@@ -58,11 +41,7 @@ const removeBook = asyncHandler(async (req, res) => {
   });
 });
 
-/**
- * @desc    Check if book is saved
- * @route   GET /api/library/:openLibraryId/status
- * @access  Private
- */
+
 const checkBookStatus = asyncHandler(async (req, res) => {
   const { openLibraryId } = req.params;
 
@@ -74,11 +53,7 @@ const checkBookStatus = asyncHandler(async (req, res) => {
   });
 });
 
-/**
- * @desc    Get user's library stats
- * @route   GET /api/library/stats
- * @access  Private
- */
+
 const getUserStats = asyncHandler(async (req, res) => {
   const stats = await userLibraryService.getUserStats(req.user.id);
 

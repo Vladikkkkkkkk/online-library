@@ -1,13 +1,13 @@
 const { PrismaClient } = require('@prisma/client');
 
-// Create Prisma client instance with logging in development
+
 const prisma = new PrismaClient({
   log: process.env.NODE_ENV === 'development' 
     ? ['query', 'info', 'warn', 'error'] 
     : ['error'],
 });
 
-// Connection handler
+
 const connectDB = async () => {
   try {
     await prisma.$connect();
@@ -18,13 +18,13 @@ const connectDB = async () => {
   }
 };
 
-// Disconnect handler
+
 const disconnectDB = async () => {
   await prisma.$disconnect();
   console.log('Database disconnected');
 };
 
-// Handle process termination
+
 process.on('SIGINT', async () => {
   await disconnectDB();
   process.exit(0);

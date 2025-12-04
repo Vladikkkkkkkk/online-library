@@ -3,7 +3,7 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import { authApi } from '../api/auth';
 import { queryClient } from '../config/queryClient';
 
-// Helper function to read token from localStorage
+
 const getStoredToken = () => {
   try {
     const authData = localStorage.getItem('auth-storage');
@@ -26,23 +26,23 @@ const useAuthStore = create(
       isLoading: true,
       error: null,
 
-      // Initialize auth state from storage
+
       initialize: async () => {
-        // First, try to get token from localStorage directly (fastest)
+
         let token = getStoredToken();
-        
-        // Also check state (in case zustand already rehydrated)
+
+
         if (!token) {
           token = get().token;
         }
 
-        // If still no token, wait a bit for zustand to rehydrate
+
         if (!token) {
           await new Promise(resolve => setTimeout(resolve, 50));
           token = get().token || getStoredToken();
         }
 
-        // If we have a token, verify it with the server
+
         if (token) {
           try {
             set({ isLoading: true, token });
@@ -54,7 +54,7 @@ const useAuthStore = create(
               isLoading: false
             });
           } catch (error) {
-            // Token is invalid or expired
+
             console.log('Token verification failed, clearing auth:', error.message);
             set({ 
               user: null, 
@@ -62,15 +62,15 @@ const useAuthStore = create(
               isAuthenticated: false, 
               isLoading: false 
             });
-            // Clear corrupted storage
+
             try {
               localStorage.removeItem('auth-storage');
             } catch {
-              // Ignore errors
+              void 0;
             }
           }
         } else {
-          // No token, user is not authenticated
+
           set({ 
             isLoading: false,
             isAuthenticated: false,
@@ -80,23 +80,23 @@ const useAuthStore = create(
         }
       },
 
-      // Login
+
       login: async (email, password) => {
         try {
           set({ isLoading: true, error: null });
           const response = await authApi.login({ email, password });
           const { user, token } = response.data;
-          
-          // Clear React Query cache to prevent data from previous user
+
+
           queryClient.clear();
-          
+
           set({
             user,
             token,
             isAuthenticated: true,
             isLoading: false,
           });
-          
+
           return { success: true };
         } catch (error) {
           set({ isLoading: false, error: error.message });
@@ -104,23 +104,23 @@ const useAuthStore = create(
         }
       },
 
-      // Register
+
       register: async (data) => {
         try {
           set({ isLoading: true, error: null });
           const response = await authApi.register(data);
           const { user, token } = response.data;
-          
-          // Clear React Query cache to start fresh
+
+
           queryClient.clear();
-          
+
           set({
             user,
             token,
             isAuthenticated: true,
             isLoading: false,
           });
-          
+
           return { success: true };
         } catch (error) {
           set({ isLoading: false, error: error.message });
@@ -128,11 +128,11 @@ const useAuthStore = create(
         }
       },
 
-      // Logout
+
       logout: () => {
-        // Clear React Query cache to prevent data leakage between users
+
         queryClient.clear();
-        
+
         set({
           user: null,
           token: null,
@@ -143,11 +143,11 @@ const useAuthStore = create(
         try {
           localStorage.removeItem('auth-storage');
         } catch {
-          // Ignore errors
+          void 0;
         }
       },
 
-      // Update profile
+
       updateProfile: async (data) => {
         try {
           set({ isLoading: true, error: null });
@@ -160,7 +160,7 @@ const useAuthStore = create(
         }
       },
 
-      // Change password
+
       changePassword: async (currentPassword, newPassword) => {
         try {
           set({ isLoading: true, error: null });
@@ -173,10 +173,10 @@ const useAuthStore = create(
         }
       },
 
-      // Clear error
+
       clearError: () => set({ error: null }),
 
-      // Check if user is admin
+
       isAdmin: () => get().user?.role === 'ADMIN',
     }),
     {

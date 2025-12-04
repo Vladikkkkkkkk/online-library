@@ -77,6 +77,7 @@ const PlaylistCard = ({ playlist }) => {
 
   const handleDelete = (e) => {
     e.preventDefault();
+    e.stopPropagation();
     setShowDeleteModal(true);
   };
 
@@ -85,25 +86,24 @@ const PlaylistCard = ({ playlist }) => {
   };
 
   return (
-    <Link to={`/playlists/${playlist.id}`} className="playlist-card">
-      <div className="playlist-card__icon">
-        <Bookmark size={32} />
-      </div>
-      <div className="playlist-card__info">
-        <h3 className="playlist-card__name">{playlist.name}</h3>
-        {playlist.description && (
-          <p className="playlist-card__description">{playlist.description}</p>
-        )}
-        <div className="playlist-card__meta">
-          <span className="playlist-card__count">
-            <BookOpen size={14} />
-            {playlist.bookCount || 0} {playlist.bookCount === 1 ? t('booklists.book') : t('booklists.books')}
-          </span>
-          {playlist.isPublic && (
-            <span className="playlist-card__badge">{t('booklists.public')}</span>
-          )}
+    <div className="playlist-card">
+      <Link to={`/playlists/${playlist.id}`} className="playlist-card__link">
+        <div className="playlist-card__icon">
+          <Bookmark size={32} />
         </div>
-      </div>
+        <div className="playlist-card__info">
+          <h3 className="playlist-card__name">{playlist.name}</h3>
+          {playlist.description && (
+            <p className="playlist-card__description">{playlist.description}</p>
+          )}
+          <div className="playlist-card__meta">
+            <span className="playlist-card__count">
+              <BookOpen size={14} />
+              {playlist.bookCount || 0} {playlist.bookCount === 1 ? t('booklists.book') : t('booklists.books')}
+            </span>
+          </div>
+        </div>
+      </Link>
       <button
         className="playlist-card__delete"
         onClick={handleDelete}
@@ -121,7 +121,7 @@ const PlaylistCard = ({ playlist }) => {
         cancelText={t('common.cancel') || 'Скасувати'}
         variant="danger"
       />
-    </Link>
+    </div>
   );
 };
 
@@ -129,17 +129,15 @@ const CreatePlaylistForm = ({ onSubmit, onCancel, isLoading }) => {
   const { t } = useTranslation();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [isPublic, setIsPublic] = useState(false);
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!name.trim()) {
       return;
     }
-    onSubmit({ name: name.trim(), description: description.trim() || null, isPublic });
+    onSubmit({ name: name.trim(), description: description.trim() || null });
     setName('');
     setDescription('');
-    setIsPublic(false);
   };
 
   return (
@@ -165,16 +163,6 @@ const CreatePlaylistForm = ({ onSubmit, onCancel, isLoading }) => {
           rows={3}
           maxLength={500}
         />
-      </div>
-      <div className="create-playlist-form__field">
-        <label className="create-playlist-form__checkbox">
-          <input
-            type="checkbox"
-            checked={isPublic}
-            onChange={(e) => setIsPublic(e.target.checked)}
-          />
-          <span>{t('booklists.makePublic')}</span>
-        </label>
       </div>
       <div className="create-playlist-form__actions">
         <Button type="submit" variant="primary" loading={isLoading}>

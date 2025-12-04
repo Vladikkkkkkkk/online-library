@@ -1,7 +1,7 @@
 const Redis = require('ioredis');
 require('dotenv').config();
 
-// Create Redis client with connection configuration
+
 const redisClient = new Redis({
   host: process.env.REDIS_HOST || 'localhost',
   port: process.env.REDIS_PORT || 6379,
@@ -9,16 +9,16 @@ const redisClient = new Redis({
   retryStrategy: (times) => {
     if (times > 10) {
       console.error('❌ Redis: Too many reconnection attempts');
-      return null; // Stop retrying
+      return null; 
     }
     return Math.min(times * 100, 3000);
   },
   maxRetriesPerRequest: 3,
   enableReadyCheck: true,
-  lazyConnect: true, // Connect on demand
+  lazyConnect: true, 
 });
 
-// Error handling
+
 redisClient.on('error', (err) => {
   console.error('❌ Redis Client Error:', err.message);
 });
@@ -39,7 +39,7 @@ redisClient.on('reconnecting', () => {
   console.log('🔄 Redis: Reconnecting...');
 });
 
-// Connect Redis
+
 const connectRedis = async () => {
   try {
     if (redisClient.status !== 'ready') {
@@ -48,11 +48,11 @@ const connectRedis = async () => {
   } catch (error) {
     console.error('❌ Redis connection failed:', error.message);
     console.warn('⚠️  Server will continue without Redis cache');
-    // Не зупиняти сервер, якщо Redis недоступний
+
   }
 };
 
-// Disconnect handler
+
 const disconnectRedis = async () => {
   try {
     if (redisClient.status !== 'ready') {
@@ -65,7 +65,7 @@ const disconnectRedis = async () => {
   }
 };
 
-// Handle process termination
+
 process.on('SIGINT', async () => {
   await disconnectRedis();
 });

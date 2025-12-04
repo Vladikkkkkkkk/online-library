@@ -3,15 +3,7 @@ const asyncHandler = require('../utils/asyncHandler');
 const ApiError = require('../utils/ApiError');
 const { generateSlug, paginate, paginationResponse } = require('../utils/helpers');
 
-/**
- * Category Controller - handles category routes
- */
 
-/**
- * @desc    Get all categories
- * @route   GET /api/categories
- * @access  Public
- */
 const getCategories = asyncHandler(async (req, res) => {
   const { page, limit } = req.query;
 
@@ -43,11 +35,7 @@ const getCategories = asyncHandler(async (req, res) => {
   });
 });
 
-/**
- * @desc    Get category by ID or slug
- * @route   GET /api/categories/:id
- * @access  Public
- */
+
 const getCategoryById = asyncHandler(async (req, res) => {
   const { id } = req.params;
 
@@ -67,16 +55,12 @@ const getCategoryById = asyncHandler(async (req, res) => {
   });
 });
 
-/**
- * @desc    Get books by category (from Open Library)
- * @route   GET /api/categories/:id/books
- * @access  Public
- */
+
 const getBooksByCategory = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { page = 1, limit = 10 } = req.query;
 
-  // Find category first
+
   const category = await prisma.category.findFirst({
     where: {
       OR: [{ id }, { slug: id }],
@@ -87,14 +71,14 @@ const getBooksByCategory = asyncHandler(async (req, res) => {
     throw ApiError.notFound('Category not found');
   }
 
-  // Use bookService to search books by category from Open Library
+
   const bookService = require('../services/bookService');
   const { getOpenLibrarySubject } = require('../utils/categoryMapper');
-  
-  // Try to map category slug to Open Library subject
+
+
   const olSubject = getOpenLibrarySubject(category.slug);
-  
-  // If we have a mapping, use it, otherwise use category name
+
+
   const searchSubject = olSubject || category.name.toLowerCase();
 
   const results = await bookService.searchBooks({
@@ -117,17 +101,13 @@ const getBooksByCategory = asyncHandler(async (req, res) => {
   });
 });
 
-/**
- * @desc    Create category (admin)
- * @route   POST /api/categories
- * @access  Private/Admin
- */
+
 const createCategory = asyncHandler(async (req, res) => {
   const { name, nameUk, description } = req.body;
 
   const slug = generateSlug(name);
 
-  // Check if category already exists
+
   const existingCategory = await prisma.category.findFirst({
     where: {
       OR: [{ name }, { slug }],
@@ -154,11 +134,7 @@ const createCategory = asyncHandler(async (req, res) => {
   });
 });
 
-/**
- * @desc    Update category (admin)
- * @route   PUT /api/categories/:id
- * @access  Private/Admin
- */
+
 const updateCategory = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { name, nameUk, description } = req.body;
@@ -191,11 +167,7 @@ const updateCategory = asyncHandler(async (req, res) => {
   });
 });
 
-/**
- * @desc    Delete category (admin)
- * @route   DELETE /api/categories/:id
- * @access  Private/Admin
- */
+
 const deleteCategory = asyncHandler(async (req, res) => {
   const { id } = req.params;
 

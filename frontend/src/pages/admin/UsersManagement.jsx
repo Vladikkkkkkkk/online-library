@@ -81,7 +81,7 @@ const UsersManagement = () => {
         </span>
       </div>
 
-      {/* Filters */}
+      {}
       <form onSubmit={handleSearch} className="admin-books__filters">
         <div className="admin-books__search">
           <Search size={18} className="admin-books__search-icon" />
@@ -98,7 +98,7 @@ const UsersManagement = () => {
         </Button>
       </form>
 
-      {/* Table */}
+      {}
       {isLoading ? (
         <div className="admin-loading">
           <Loader size="lg" />
@@ -187,7 +187,7 @@ const UsersManagement = () => {
             </table>
           </div>
 
-          {/* Pagination */}
+          {}
           {pagination.totalPages > 1 && (
             <div className="admin-pagination">
               <button

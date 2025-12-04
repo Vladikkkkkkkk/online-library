@@ -2,16 +2,16 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { categoriesApi } from '../api/categories';
 import toast from 'react-hot-toast';
 
-// Get all categories
+
 export const useCategories = (params) => {
   return useQuery({
     queryKey: ['categories', params],
     queryFn: () => categoriesApi.getAll(params),
-    staleTime: 30 * 60 * 1000, // 30 minutes - categories don't change often
+    staleTime: 30 * 60 * 1000, 
   });
 };
 
-// Get category by ID
+
 export const useCategory = (id) => {
   return useQuery({
     queryKey: ['category', id],
@@ -21,7 +21,7 @@ export const useCategory = (id) => {
   });
 };
 
-// Get books by category
+
 export const useCategoryBooks = (id, params) => {
   return useQuery({
     queryKey: ['category', id, 'books', params],
@@ -31,7 +31,7 @@ export const useCategoryBooks = (id, params) => {
   });
 };
 
-// Admin: Create category
+
 export const useCreateCategory = () => {
   const queryClient = useQueryClient();
 
@@ -47,7 +47,7 @@ export const useCreateCategory = () => {
   });
 };
 
-// Admin: Update category
+
 export const useUpdateCategory = () => {
   const queryClient = useQueryClient();
 
@@ -64,7 +64,7 @@ export const useUpdateCategory = () => {
   });
 };
 
-// Admin: Delete category
+
 export const useDeleteCategory = () => {
   const queryClient = useQueryClient();
 

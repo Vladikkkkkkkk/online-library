@@ -1,16 +1,7 @@
 const bookService = require('../services/bookService');
 const asyncHandler = require('../utils/asyncHandler');
 
-/**
- * Book Controller - handles book-related routes
- * Now works only with Open Library API
- */
 
-/**
- * @desc    Search books from Open Library
- * @route   GET /api/books/search
- * @access  Public
- */
 const searchBooks = asyncHandler(async (req, res) => {
   const {
     q: query,
@@ -26,7 +17,7 @@ const searchBooks = asyncHandler(async (req, res) => {
     sortBy,
   } = req.query;
 
-  // Validate year parameters
+
   const currentYear = new Date().getFullYear();
   let validatedYearFrom = yearFrom ? parseInt(yearFrom, 10) : undefined;
   let validatedYearTo = yearTo ? parseInt(yearTo, 10) : undefined;
@@ -63,11 +54,7 @@ const searchBooks = asyncHandler(async (req, res) => {
   });
 });
 
-/**
- * @desc    Get all books (from Open Library)
- * @route   GET /api/books
- * @access  Public
- */
+
 const getBooks = asyncHandler(async (req, res) => {
   const { page, limit, category, language, q: query } = req.query;
 
@@ -85,11 +72,7 @@ const getBooks = asyncHandler(async (req, res) => {
   });
 });
 
-/**
- * @desc    Get book by Open Library ID
- * @route   GET /api/books/:id
- * @access  Public
- */
+
 const getBookById = asyncHandler(async (req, res) => {
   const { id } = req.params;
 
@@ -101,11 +84,7 @@ const getBookById = asyncHandler(async (req, res) => {
   });
 });
 
-/**
- * @desc    Get trending books from Open Library
- * @route   GET /api/books/trending
- * @access  Public
- */
+
 const getTrendingBooks = asyncHandler(async (req, res) => {
   const { period = 'weekly', limit = 10 } = req.query;
 

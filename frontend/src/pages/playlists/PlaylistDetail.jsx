@@ -70,7 +70,7 @@ const PlaylistDetail = () => {
       id: pb.openLibraryId || pb.book?.id,
       openLibraryId: pb.openLibraryId || pb.book?.id,
     })) || [];
-  
+
   const pagination = playlist?.pagination || {};
   const totalBooks = pagination?.totalItems || books.length;
 
@@ -96,9 +96,6 @@ const PlaylistDetail = () => {
             )}
             <div className="playlist-detail__meta">
               <span>{totalBooks} {totalBooks === 1 ? 'book' : 'books'}</span>
-              {playlist.isPublic && (
-                <span className="playlist-detail__badge">Public</span>
-              )}
               <span className="playlist-detail__author">
                 by {playlist.user?.firstName} {playlist.user?.lastName}
               </span>
@@ -129,8 +126,8 @@ const PlaylistDetail = () => {
                 showActions={isOwner}
               />
             </div>
-            
-            {/* Pagination */}
+
+            {}
             {totalBooks > limit && (
               <div className="playlist-detail__pagination">
                 <Button

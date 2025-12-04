@@ -3,23 +3,23 @@ const path = require('path');
 const config = require('../config');
 const ApiError = require('../utils/ApiError');
 
-// Storage configuration
+
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, config.upload.uploadDir);
   },
   filename: (req, file, cb) => {
-    // Generate unique filename: timestamp-random-originalname
+
     const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1E9)}`;
     const ext = path.extname(file.originalname);
     cb(null, `${uniqueSuffix}${ext}`);
   },
 });
 
-// File filter for book files
+
 const bookFileFilter = (req, file, cb) => {
   const ext = path.extname(file.originalname).toLowerCase().slice(1);
-  
+
   if (config.upload.allowedFormats.includes(ext)) {
     cb(null, true);
   } else {
@@ -29,10 +29,10 @@ const bookFileFilter = (req, file, cb) => {
   }
 };
 
-// File filter for images
+
 const imageFileFilter = (req, file, cb) => {
   const allowedMimes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-  
+
   if (allowedMimes.includes(file.mimetype)) {
     cb(null, true);
   } else {
@@ -40,7 +40,7 @@ const imageFileFilter = (req, file, cb) => {
   }
 };
 
-// Upload middleware for book files
+
 const uploadBook = multer({
   storage,
   limits: {
@@ -49,7 +49,7 @@ const uploadBook = multer({
   fileFilter: bookFileFilter,
 });
 
-// Upload middleware for images (covers, avatars)
+
 const uploadImage = multer({
   storage: multer.diskStorage({
     destination: (req, file, cb) => {
@@ -62,7 +62,7 @@ const uploadImage = multer({
     },
   }),
   limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB for images
+    fileSize: 5 * 1024 * 1024, 
   },
   fileFilter: imageFileFilter,
 });

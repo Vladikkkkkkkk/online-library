@@ -66,7 +66,7 @@ const options = {
       { name: 'Admin', description: 'Admin panel endpoints' },
     ],
   },
-  apis: ['./src/routes/*.js'], // Paths to files containing OpenAPI definitions
+  apis: ['./src/routes/*.js'], 
 };
 
 const swaggerSpec = swaggerJsdoc(options);

@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { libraryApi } from '../api/library';
 import toast from 'react-hot-toast';
 
-// Get saved books
+
 export const useSavedBooks = (params) => {
   return useQuery({
     queryKey: ['library', 'saved', params],
@@ -11,24 +11,24 @@ export const useSavedBooks = (params) => {
   });
 };
 
-// Check if book is saved
+
 export const useBookStatus = (openLibraryId, options = {}) => {
   return useQuery({
     queryKey: ['library', 'status', openLibraryId],
     queryFn: () => libraryApi.checkStatus(openLibraryId),
     enabled: !!openLibraryId && (options.enabled !== false),
-    retry: false, // Don't retry on 401 errors
+    retry: false, 
   });
 };
 
-// Save book to library
+
 export const useSaveBook = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: ({ openLibraryId }) => libraryApi.saveBook(openLibraryId),
     onSuccess: (_, { openLibraryId }) => {
-      // Invalidate all library queries to refresh the list
+
       queryClient.invalidateQueries({ queryKey: ['library'] });
       queryClient.setQueryData(['library', 'status', openLibraryId], { success: true, data: { isSaved: true } });
       toast.success('Book saved to library!');
@@ -39,14 +39,14 @@ export const useSaveBook = () => {
   });
 };
 
-// Remove book from library
+
 export const useRemoveBook = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: ({ openLibraryId }) => libraryApi.removeBook(openLibraryId),
     onSuccess: (_, { openLibraryId }) => {
-      // Invalidate all library queries to refresh the list
+
       queryClient.invalidateQueries({ queryKey: ['library'] });
       queryClient.setQueryData(['library', 'status', openLibraryId], { success: true, data: { isSaved: false } });
       toast.success('Book removed from library!');
@@ -57,7 +57,7 @@ export const useRemoveBook = () => {
   });
 };
 
-// Get user stats
+
 export const useUserStats = () => {
   return useQuery({
     queryKey: ['library', 'stats'],

@@ -56,7 +56,7 @@ const Header = () => {
             {t('nav.categories')}
           </Link>
 
-          {/* Language Toggle */}
+          {}
           <button className="header__lang-toggle" onClick={toggleLanguage} title="Change language">
             <Globe size={18} />
             <span>{i18n.language.toUpperCase()}</span>

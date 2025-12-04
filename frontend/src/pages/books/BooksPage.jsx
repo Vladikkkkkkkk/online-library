@@ -11,9 +11,9 @@ const BooksPage = () => {
   const { t } = useTranslation();
   const { id: categoryId } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
-  
+
   const initialCategory = categoryId || searchParams.get('category') || '';
-  
+
   const [filters, setFilters] = useState({
     q: searchParams.get('q') || '',
     category: initialCategory,

@@ -3,15 +3,7 @@ const asyncHandler = require('../utils/asyncHandler');
 const ApiError = require('../utils/ApiError');
 const { paginate, paginationResponse } = require('../utils/helpers');
 
-/**
- * Admin Controller - handles admin-specific routes
- */
 
-/**
- * @desc    Get all users (admin)
- * @route   GET /api/admin/users
- * @access  Private/Admin
- */
 const getUsers = asyncHandler(async (req, res) => {
   const { page = 1, limit = 10, role, search } = req.query;
   const { skip, take } = paginate(parseInt(page, 10), parseInt(limit, 10));
@@ -58,11 +50,7 @@ const getUsers = asyncHandler(async (req, res) => {
   });
 });
 
-/**
- * @desc    Get user by ID (admin)
- * @route   GET /api/admin/users/:id
- * @access  Private/Admin
- */
+
 const getUserById = asyncHandler(async (req, res) => {
   const { id } = req.params;
 
@@ -96,11 +84,7 @@ const getUserById = asyncHandler(async (req, res) => {
   });
 });
 
-/**
- * @desc    Update user role (admin)
- * @route   PUT /api/admin/users/:id/role
- * @access  Private/Admin
- */
+
 const updateUserRole = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { role } = req.body;
@@ -117,7 +101,7 @@ const updateUserRole = asyncHandler(async (req, res) => {
     throw ApiError.notFound('User not found');
   }
 
-  // Prevent changing own role
+
   if (user.id === req.user.id) {
     throw ApiError.badRequest('Cannot change your own role');
   }
@@ -141,11 +125,7 @@ const updateUserRole = asyncHandler(async (req, res) => {
   });
 });
 
-/**
- * @desc    Block/Unblock user (admin)
- * @route   PUT /api/admin/users/:id/block
- * @access  Private/Admin
- */
+
 const toggleUserBlock = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { isBlocked } = req.body;
@@ -158,12 +138,12 @@ const toggleUserBlock = asyncHandler(async (req, res) => {
     throw ApiError.notFound('User not found');
   }
 
-  // Prevent blocking own account
+
   if (user.id === req.user.id) {
     throw ApiError.badRequest('Cannot block your own account');
   }
 
-  // Prevent blocking other admins
+
   if (user.role === 'ADMIN') {
     throw ApiError.badRequest('Cannot block admin users');
   }
@@ -188,11 +168,7 @@ const toggleUserBlock = asyncHandler(async (req, res) => {
   });
 });
 
-/**
- * @desc    Get dashboard statistics (admin)
- * @route   GET /api/admin/stats
- * @access  Private/Admin
- */
+
 const getDashboardStats = asyncHandler(async (req, res) => {
   const [
     totalUsers,
@@ -214,7 +190,7 @@ const getDashboardStats = asyncHandler(async (req, res) => {
     }),
   ]);
 
-  // Format recent activity - show user registrations
+
   const recentActivity = recentUsers.map((user) => ({
     text: `${user.firstName} ${user.lastName} (${user.email}) зареєструвався`,
     time: new Date(user.createdAt).toLocaleDateString('uk-UA', {
@@ -236,11 +212,7 @@ const getDashboardStats = asyncHandler(async (req, res) => {
   });
 });
 
-/**
- * @desc    Get all authors (admin)
- * @route   GET /api/admin/authors
- * @access  Private/Admin
- */
+
 const getAuthors = asyncHandler(async (req, res) => {
   const { page = 1, limit = 20, search } = req.query;
   const { skip, take } = paginate(parseInt(page, 10), parseInt(limit, 10));
@@ -270,11 +242,7 @@ const getAuthors = asyncHandler(async (req, res) => {
   });
 });
 
-/**
- * @desc    Create author (admin)
- * @route   POST /api/admin/authors
- * @access  Private/Admin
- */
+
 const createAuthor = asyncHandler(async (req, res) => {
   const { name, biography, birthYear, deathYear, photoUrl } = req.body;
 
@@ -295,11 +263,7 @@ const createAuthor = asyncHandler(async (req, res) => {
   });
 });
 
-/**
- * @desc    Update author (admin)
- * @route   PUT /api/admin/authors/:id
- * @access  Private/Admin
- */
+
 const updateAuthor = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { name, biography, birthYear, deathYear, photoUrl } = req.body;
@@ -330,11 +294,7 @@ const updateAuthor = asyncHandler(async (req, res) => {
   });
 });
 
-/**
- * @desc    Delete author (admin)
- * @route   DELETE /api/admin/authors/:id
- * @access  Private/Admin
- */
+
 const deleteAuthor = asyncHandler(async (req, res) => {
   const { id } = req.params;
 

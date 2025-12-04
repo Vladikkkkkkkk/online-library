@@ -24,7 +24,7 @@ const Login = () => {
   const onSubmit = async (data) => {
     setError('');
     const result = await login(data.email, data.password);
-    
+
     if (result.success) {
       toast.success('Welcome back!');
       navigate(from, { replace: true });

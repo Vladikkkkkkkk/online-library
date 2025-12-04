@@ -1,12 +1,10 @@
-/**
- * Custom API Error class for handling HTTP errors
- */
+
 class ApiError extends Error {
   constructor(statusCode, message, isOperational = true, stack = '') {
     super(message);
     this.statusCode = statusCode;
     this.isOperational = isOperational;
-    
+
     if (stack) {
       this.stack = stack;
     } else {
@@ -14,7 +12,7 @@ class ApiError extends Error {
     }
   }
 
-  // Static factory methods for common errors
+
   static badRequest(message = 'Bad Request') {
     return new ApiError(400, message);
   }

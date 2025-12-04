@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { playlistsApi } from '../api/playlists';
 import toast from 'react-hot-toast';
 
-// Get user's playlists
+
 export const useUserPlaylists = (params) => {
   return useQuery({
     queryKey: ['playlists', 'user', params],
@@ -11,7 +11,7 @@ export const useUserPlaylists = (params) => {
   });
 };
 
-// Get playlist by ID
+
 export const usePlaylist = (id, params = {}) => {
   return useQuery({
     queryKey: ['playlist', id, params],
@@ -21,7 +21,7 @@ export const usePlaylist = (id, params = {}) => {
   });
 };
 
-// Create playlist
+
 export const useCreatePlaylist = () => {
   const queryClient = useQueryClient();
 
@@ -37,7 +37,7 @@ export const useCreatePlaylist = () => {
   });
 };
 
-// Update playlist
+
 export const useUpdatePlaylist = () => {
   const queryClient = useQueryClient();
 
@@ -54,7 +54,7 @@ export const useUpdatePlaylist = () => {
   });
 };
 
-// Delete playlist
+
 export const useDeletePlaylist = () => {
   const queryClient = useQueryClient();
 
@@ -70,7 +70,7 @@ export const useDeletePlaylist = () => {
   });
 };
 
-// Add book to playlist
+
 export const useAddBookToPlaylist = () => {
   const queryClient = useQueryClient();
 
@@ -87,7 +87,7 @@ export const useAddBookToPlaylist = () => {
   });
 };
 
-// Remove book from playlist
+
 export const useRemoveBookFromPlaylist = () => {
   const queryClient = useQueryClient();
 
@@ -104,7 +104,7 @@ export const useRemoveBookFromPlaylist = () => {
   });
 };
 
-// Reorder books in playlist
+
 export const useReorderPlaylistBooks = () => {
   const queryClient = useQueryClient();
 

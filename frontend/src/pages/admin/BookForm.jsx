@@ -29,8 +29,8 @@ const BookForm = () => {
   });
 
   const book = bookData?.data;
-  
-  // Compute initial categories from book data
+
+
   const initialCategories = useMemo(() => {
     return book?.categories?.map((c) => c.id) || [];
   }, [book?.categories]);
@@ -47,10 +47,10 @@ const BookForm = () => {
     reset,
     watch,
   } = useForm();
-  
+
   const fileUrl = watch('fileUrl');
 
-  // Initialize form when book data loads
+
   useLayoutEffect(() => {
     if (book && !initializedRef.current) {
       initializedRef.current = true;
@@ -66,30 +66,30 @@ const BookForm = () => {
         fileUrl: book.fileUrl,
         fileFormat: book.fileFormat,
       });
-      
-      // Set file preview if book has file
+
+
       if (book.fileUrl) {
         const fileName = book.fileUrl.split('/').pop();
         setFilePreview(fileName);
       }
     }
   }, [book, reset]);
-  
-  // Sync categories when initialCategories change (separate from form reset)
+
+
   useLayoutEffect(() => {
     if (initialCategories.length > 0 && selectedCategories.length === 0) {
-      // This is intentional - we need to sync form state from external data
+
       setSelectedCategories(initialCategories);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, [initialCategories]);
 
-  // Upload file mutation
+
   const uploadFileMutation = useMutation({
     mutationFn: async ({ bookId, file }) => {
       const formData = new FormData();
       formData.append('file', file);
-      
+
       const response = await apiClient.post(`/books/${bookId}/upload`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
@@ -103,8 +103,8 @@ const BookForm = () => {
     mutationFn: (data) => adminApi.createBook(data),
     onSuccess: async (data) => {
       const bookId = data.data?.id;
-      
-      // If there's a file to upload, upload it
+
+
       if (selectedFile && bookId) {
         try {
           await uploadFileMutation.mutateAsync({ bookId, file: selectedFile });
@@ -115,7 +115,7 @@ const BookForm = () => {
       } else {
         toast.success('Книгу створено');
       }
-      
+
       navigate('/admin/books');
     },
     onError: (error) => {
@@ -126,7 +126,7 @@ const BookForm = () => {
   const updateMutation = useMutation({
     mutationFn: (data) => adminApi.updateBook(id, data),
     onSuccess: async () => {
-      // If there's a file to upload, upload it
+
       if (selectedFile && id) {
         try {
           await uploadFileMutation.mutateAsync({ bookId: id, file: selectedFile });
@@ -137,7 +137,7 @@ const BookForm = () => {
       } else {
         toast.success('Книгу оновлено');
       }
-      
+
       navigate('/admin/books');
     },
     onError: (error) => {
@@ -146,7 +146,7 @@ const BookForm = () => {
   });
 
   const onSubmit = (data) => {
-    // Normalize empty strings to null for optional fields
+
     const normalizeField = (value) => {
       if (value === '' || value === undefined) return null;
       return value;
@@ -164,7 +164,7 @@ const BookForm = () => {
       publishYear: data.publishYear ? parseInt(data.publishYear, 10) : null,
       pageCount: data.pageCount ? parseInt(data.pageCount, 10) : null,
       categoryIds: selectedCategories,
-      // If file is selected, remove fileUrl as it will be set after upload
+
       ...(selectedFile && { fileUrl: null, fileFormat: null }),
     };
 
@@ -186,24 +186,24 @@ const BookForm = () => {
   const handleFileSelect = (e) => {
     const file = e.target.files[0];
     if (file) {
-      // Validate file type - only PDF allowed
+
       const fileExtension = file.name.split('.').pop().toLowerCase();
       if (fileExtension !== 'pdf') {
         toast.error('Невірний формат файлу. Дозволений тільки формат PDF');
         return;
       }
-      
-      // Validate file size (50MB)
+
+
       const maxSize = 50 * 1024 * 1024;
       if (file.size > maxSize) {
         toast.error('Файл занадто великий. Максимальний розмір: 50MB');
         return;
       }
-      
+
       setSelectedFile(file);
       setFilePreview(file.name);
-      
-      // Auto-set file format based on extension
+
+
       const formatMap = {
         'pdf': 'PDF',
         'epub': 'EPUB',
@@ -454,7 +454,7 @@ const BookForm = () => {
             </div>
           )}
 
-          {/* Categories */}
+          {}
           <div className="settings__form-group">
             <label>Категорії</label>
             <div

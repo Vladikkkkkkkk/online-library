@@ -7,16 +7,9 @@ const cache = require('../utils/cache');
 const config = require('../config');
 const axios = require('axios');
 
-/**
- * Review Service - manages book reviews and ratings
- */
+
 class ReviewService {
-  /**
-   * Get reviews for a book
-   * @param {string} openLibraryId - Open Library ID
-   * @param {object} params - Pagination params
-   * @returns {Promise<object>} - Reviews with pagination and aggregated rating
-   */
+
   async getBookReviews(openLibraryId, params = {}) {
     const { page = 1, limit = 10 } = params;
     const { skip, take } = paginate(page, limit);
@@ -43,7 +36,7 @@ class ReviewService {
       prisma.review.count({ where }),
     ]);
 
-    // Get our ratings stats
+
     const ratingStats = await prisma.review.aggregate({
       where: { openLibraryId },
       _avg: { rating: true },
@@ -53,19 +46,19 @@ class ReviewService {
     const ourRating = ratingStats._avg.rating ? Number(ratingStats._avg.rating) : null;
     const ourRatingCount = ratingStats._count.rating || 0;
 
-    // Get Open Library ratings - use lightweight search API instead of full getBookById
+
     let openLibraryRating = null;
     let openLibraryRatingCount = 0;
     try {
-      // Check cache first for Open Library ratings
+
       const olRatingCacheKey = `ol_ratings:${openLibraryId}`;
       const cachedOlRating = await cache.get(olRatingCacheKey);
-      
+
       if (cachedOlRating) {
         openLibraryRating = cachedOlRating.rating;
         openLibraryRatingCount = cachedOlRating.count;
       } else {
-        // Lightweight API call to get only ratings
+
         const searchResponse = await axios.get(
           `${process.env.OPEN_LIBRARY_API_URL || 'https://openlibrary.org'}/search.json?q=key:/works/${openLibraryId}&fields=key,ratings_average,ratings_count&limit=1`
         );
@@ -73,7 +66,7 @@ class ReviewService {
           const searchBook = searchResponse.data.docs[0];
           openLibraryRating = searchBook.ratings_average ? Number(searchBook.ratings_average) : null;
           openLibraryRatingCount = searchBook.ratings_count || 0;
-          // Cache Open Library rating for 1 hour
+
           await cache.set(olRatingCacheKey, { rating: openLibraryRating, count: openLibraryRatingCount }, 3600);
         }
       }
@@ -81,7 +74,7 @@ class ReviewService {
       console.error(`Failed to fetch Open Library ratings for ${openLibraryId}:`, error.message);
     }
 
-    // Combine ratings using bookService method (it will use cache internally)
+
     const combinedRatings = await bookService.combineRatings(
       openLibraryId,
       openLibraryRating,
@@ -91,7 +84,7 @@ class ReviewService {
     const averageRating = combinedRatings.averageRating;
     const ratingCount = combinedRatings.ratingCount;
 
-    // Get rating distribution
+
     const ratingDistribution = await prisma.review.groupBy({
       by: ['rating'],
       where: { openLibraryId },
@@ -134,12 +127,7 @@ class ReviewService {
     };
   }
 
-  /**
-   * Get user's review for a book
-   * @param {string} userId - User ID
-   * @param {string} openLibraryId - Open Library ID
-   * @returns {Promise<object|null>} - Review or null
-   */
+
   async getUserReview(userId, openLibraryId) {
     const review = await prisma.review.findFirst({
       where: {
@@ -173,41 +161,35 @@ class ReviewService {
     };
   }
 
-  /**
-   * Invalidate cache for a book's ratings and reviews
-   * @param {string} openLibraryId - Open Library ID
-   * @param {string} userId - User ID (optional, for recommendations cache)
-   */
+
   async invalidateBookCache(openLibraryId, userId = null) {
     try {
-      // Invalidate combined ratings cache (most important - this affects all book displays)
+
       await cache.del(`ratings:combined:${openLibraryId}`);
-      // Invalidate book details cache
+
       await cache.del(`book:${openLibraryId}`);
-      // Invalidate Open Library ratings cache
+
       await cache.del(`ol_ratings:${openLibraryId}`);
-      
-      // Invalidate search and trending caches that might include this book
-      // This is important to ensure ratings are updated everywhere
+
+
       try {
         await cache.delPattern(`search:*`);
         await cache.delPattern(`trending:*`);
       } catch (patternError) {
-        // Pattern deletion can be slow, log but don't fail
+
         console.warn('Error invalidating search/trending cache patterns:', patternError.message);
       }
-      
-      // Invalidate user's recommendations cache if userId provided
+
+
       if (userId) {
         await cache.delPattern(`recommendations:${userId}:*`);
-        await cache.del(`user_preferences:${userId}`); // Invalidate preferences cache
-        await cache.del(`excluded_books:${userId}`); // Invalidate excluded books cache
+        await cache.del(`user_preferences:${userId}`); 
+        await cache.del(`excluded_books:${userId}`); 
       }
-      
-      // Invalidate saved books cache for all users (book rating changed, affects all users)
-      // Note: This is broad but necessary for accurate ratings display
+
+
       try {
-        // Get all user IDs who saved this book to invalidate their cache
+
         const usersWithBook = await prisma.savedBook.findMany({
           where: { openLibraryId },
           select: { userId: true },
@@ -217,11 +199,11 @@ class ReviewService {
           await cache.delPattern(`saved_books:${savedBook.userId}:*`);
         }
       } catch (err) {
-        // Don't fail if this fails
+
         console.warn('Error invalidating saved books cache:', err.message);
       }
-      
-      // Invalidate playlist caches that might include this book
+
+
       try {
         const playlistsWithBook = await prisma.playlistBook.findMany({
           where: { openLibraryId },
@@ -238,28 +220,22 @@ class ReviewService {
       }
     } catch (error) {
       console.error(`Cache invalidation error for ${openLibraryId}:`, error.message);
-      // Don't throw - cache invalidation failure shouldn't break the operation
+
     }
   }
 
-  /**
-   * Create or update review
-   * @param {string} userId - User ID
-   * @param {string} openLibraryId - Open Library ID
-   * @param {object} data - Review data
-   * @returns {Promise<object>} - Created/updated review
-   */
+
   async createOrUpdateReview(userId, openLibraryId, data) {
     const { rating, title, comment } = data;
 
-    // Validate rating
+
     if (!rating || rating < 1 || rating > 5) {
       throw ApiError.badRequest('Rating must be between 1 and 5');
     }
 
-    // Verify book exists in Open Library - use lightweight check instead of full getBookById
+
     try {
-      // Use HEAD request to check if book exists without downloading full data
+
       await axios.head(
         `${process.env.OPEN_LIBRARY_API_URL || 'https://openlibrary.org'}/works/${openLibraryId}.json`,
         { timeout: 5000, validateStatus: (status) => status < 500 }
@@ -268,10 +244,10 @@ class ReviewService {
       if (error.response?.status === 404) {
         throw ApiError.notFound('Book not found in Open Library');
       }
-      // If network error, allow creation (book might exist but API is down)
+
     }
 
-    // Check if review already exists
+
     const existingReview = await prisma.review.findFirst({
       where: {
         userId,
@@ -280,7 +256,7 @@ class ReviewService {
     });
 
     if (existingReview) {
-      // Update existing review
+
       const updated = await prisma.review.update({
         where: { id: existingReview.id },
         data: {
@@ -310,13 +286,13 @@ class ReviewService {
         user: updated.user,
       };
 
-      // Invalidate cache after update
+
       await this.invalidateBookCache(openLibraryId, userId);
 
       return result;
     }
 
-    // Create new review
+
     const review = await prisma.review.create({
       data: {
         userId,
@@ -347,17 +323,13 @@ class ReviewService {
       user: review.user,
     };
 
-    // Invalidate cache after create
+
     await this.invalidateBookCache(openLibraryId, userId);
 
     return result;
   }
 
-  /**
-   * Delete review
-   * @param {string} userId - User ID
-   * @param {string} openLibraryId - Open Library ID
-   */
+
   async deleteReview(userId, openLibraryId) {
     const review = await prisma.review.findFirst({
       where: {
@@ -378,16 +350,11 @@ class ReviewService {
       where: { id: review.id },
     });
 
-    // Invalidate cache after delete
+
     await this.invalidateBookCache(openLibraryId, userId);
   }
 
-  /**
-   * Get user's reviews
-   * @param {string} userId - User ID
-   * @param {object} params - Pagination params
-   * @returns {Promise<object>} - Reviews with pagination
-   */
+
   async getUserReviews(userId, params = {}) {
     const { page = 1, limit = 10 } = params;
     const { skip, take } = paginate(page, limit);
@@ -404,7 +371,7 @@ class ReviewService {
       prisma.review.count({ where }),
     ]);
 
-    // Fetch book details for each review
+
     const reviewsWithBooks = await Promise.all(
       reviews.map(async (review) => {
         try {

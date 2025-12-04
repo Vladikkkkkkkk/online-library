@@ -18,8 +18,7 @@ import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
 import './BookReader.css';
 
-// Set up PDF.js worker - use unpkg CDN (more reliable)
-// Note: Using .mjs extension as newer versions of pdfjs-dist use ES modules
+
 if (typeof window !== 'undefined') {
   pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 }
@@ -40,30 +39,30 @@ const BookReader = () => {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [error, setError] = useState(null);
 
-  // Redirect if trying to read Open Library book
+
   useEffect(() => {
     if (source === 'openlibrary') {
       navigate(`/books/${id}?source=openlibrary`, { replace: true });
     }
   }, [source, id, navigate]);
 
-  // Get PDF URL - only for local books (useMemo to recalculate when book loads)
+
   const pdfUrl = useMemo(() => {
     if (!book || source !== 'local') return null;
-    
-    // Only local books with fileUrl can be read
+
+
     if (book.fileUrl) {
-      // Use endpoint for reading (better control over headers and CORS)
+
       const apiUrl = getApiUrl();
-      // Add source=local query parameter to ensure correct handling
+
       return `${apiUrl}/books/${id}/read?source=local`;
     }
-    
+
     return null;
   }, [book, source, id]);
 
   useEffect(() => {
-    // Try to restore reading progress from localStorage
+
     const savedProgress = localStorage.getItem(`reading-progress-${id}`);
     if (savedProgress) {
       const progress = JSON.parse(savedProgress);
@@ -72,7 +71,7 @@ const BookReader = () => {
   }, [id]);
 
   useEffect(() => {
-    // Save reading progress
+
     if (pageNumber && numPages) {
       localStorage.setItem(`reading-progress-${id}`, JSON.stringify({
         page: pageNumber,
@@ -82,7 +81,7 @@ const BookReader = () => {
     }
   }, [pageNumber, numPages, id]);
 
-  // Define toggleFullscreen before using it
+
   const toggleFullscreen = useCallback(() => {
     if (!document.fullscreenElement) {
       const element = document.documentElement;
@@ -108,7 +107,7 @@ const BookReader = () => {
     }
   }, []);
 
-  // Handle fullscreen changes
+
   useEffect(() => {
     const handleFullscreenChange = () => {
       setIsFullscreen(!!document.fullscreenElement);
@@ -127,10 +126,10 @@ const BookReader = () => {
     };
   }, []);
 
-  // Keyboard navigation
+
   useEffect(() => {
     const handleKeyPress = (e) => {
-      // Don't handle if user is typing in input
+
       if (e.target.tagName === 'INPUT') return;
 
       switch (e.key) {
@@ -225,7 +224,7 @@ const BookReader = () => {
 
   return (
     <div className={`book-reader ${isFullscreen ? 'book-reader--fullscreen' : ''}`}>
-      {/* Header */}
+      {}
       <header className="book-reader__header">
         <div className="book-reader__header-left">
           <Link to={`/books/${id}`}>
@@ -254,7 +253,7 @@ const BookReader = () => {
         </div>
       </header>
 
-      {/* PDF Viewer */}
+      {}
       <div className="book-reader__content">
         {error ? (
           <div className="book-reader__error-message">
@@ -302,7 +301,7 @@ const BookReader = () => {
         )}
       </div>
 
-      {/* Controls */}
+      {}
       <div className="book-reader__controls">
         <div className="book-reader__controls-left">
           <Button
@@ -333,7 +332,7 @@ const BookReader = () => {
             <ChevronLeft size={18} />
             {t('reader.prevPage')}
           </Button>
-          
+
           <div className="book-reader__page-info">
             <input
               type="number"

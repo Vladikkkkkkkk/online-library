@@ -49,7 +49,7 @@ const Modal = ({ isOpen, onClose, title, children, footer }) => {
   );
 };
 
-// Confirm Modal Component
+
 export const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message, confirmText = 'Підтвердити', cancelText = 'Скасувати', variant = 'danger' }) => {
   const handleConfirm = () => {
     onConfirm();

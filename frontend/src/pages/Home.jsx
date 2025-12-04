@@ -14,7 +14,7 @@ const Home = () => {
   const { data: categoriesData, isLoading: categoriesLoading } = useCategories();
   const { data: recommendationsData, isLoading: recommendationsLoading } = useRecommendations(
     8,
-    isAuthenticated // Only fetch if authenticated
+    isAuthenticated 
   );
 
   const trendingBooks = trendingData?.data || [];
@@ -23,7 +23,7 @@ const Home = () => {
 
   return (
     <div className="home">
-      {/* Hero Section */}
+      {}
       <section className="hero">
         <div className="hero__container">
           <div className="hero__content">
@@ -58,7 +58,7 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Features Section */}
+      {}
       <section className="features">
         <div className="features__container">
           <div className="feature">
@@ -85,7 +85,7 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Recommendations Section - Only for authenticated users */}
+      {}
       {isAuthenticated && (
         <section className="section section--recommendations">
           <div className="section__container">
@@ -110,7 +110,7 @@ const Home = () => {
         </section>
       )}
 
-      {/* Trending Books Section */}
+      {}
       <section className="section">
         <div className="section__container">
           <div className="section__header">
@@ -129,7 +129,7 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Categories Section */}
+      {}
       <section className="section section--alt">
         <div className="section__container">
           <div className="section__header">
@@ -164,7 +164,7 @@ const Home = () => {
         </div>
       </section>
 
-      {/* CTA Section */}
+      {}
       <section className="cta">
         <div className="cta__container">
           <h2>{t('home.cta.title')}</h2>

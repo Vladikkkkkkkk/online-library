@@ -86,7 +86,7 @@ const ImportBooks = () => {
         Знайдіть та імпортуйте книги з каталогу Open Library (понад 20 мільйонів книг)
       </p>
 
-      {/* Search Form */}
+      {}
       <form onSubmit={handleSearch} className="admin-books__filters">
         <div className="admin-books__search">
           <Search size={18} className="admin-books__search-icon" />
@@ -103,7 +103,7 @@ const ImportBooks = () => {
         </Button>
       </form>
 
-      {/* Search Results */}
+      {}
       {isSearching ? (
         <div className="admin-loading">
           <Loader size="lg" />
@@ -174,11 +174,11 @@ const ImportBooks = () => {
         </div>
       ) : null}
 
-      {/* Import Panel */}
+      {}
       {selectedBook && (
         <div className="settings__panel">
           <h3 style={{ marginBottom: '1rem' }}>Імпортувати: {selectedBook.title}</h3>
-          
+
           <div className="settings__form-group">
             <label>Виберіть категорії:</label>
             <div

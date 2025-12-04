@@ -1,10 +1,10 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-// Translations
+
 const translations = {
   uk: {
-    // Navigation
+
     'nav.home': 'Головна',
     'nav.books': 'Книги',
     'nav.categories': 'Категорії',
@@ -16,7 +16,7 @@ const translations = {
     'nav.register': 'Реєстрація',
     'nav.logout': 'Вийти',
 
-    // Home page
+
     'home.hero.title': 'Відкрийте свою наступну',
     'home.hero.titleHighlight': 'улюблену книгу',
     'home.hero.description': 'Досліджуйте тисячі книг з нашої цифрової бібліотеки. Шукайте, читайте та завантажуйте улюблені видання будь-де і будь-коли.',
@@ -37,7 +37,7 @@ const translations = {
     'home.cta.description': 'Створіть безкоштовний акаунт та починайте будувати свою бібліотеку вже сьогодні.',
     'home.cta.signup': 'Зареєструватися',
 
-    // Auth
+
     'auth.login': 'Вхід',
     'auth.register': 'Реєстрація',
     'auth.email': 'Email',
@@ -51,7 +51,7 @@ const translations = {
     'auth.hasAccount': 'Вже є акаунт?',
     'auth.forgotPassword': 'Забули пароль?',
 
-    // Books
+
     'books.title': 'Бібліотека книг',
     'books.search': 'Пошук книг...',
     'books.filters': 'Фільтри',
@@ -67,7 +67,7 @@ const translations = {
     'books.author': 'Автор',
     'books.publisher': 'Видавництво',
 
-    // Profile
+
     'profile.title': 'Профіль',
     'profile.stats': 'Статистика',
     'profile.savedBooks': 'Збережених книг',
@@ -78,7 +78,7 @@ const translations = {
     'profile.catalog': 'Каталог книг',
     'profile.registered': 'Зареєстровано',
 
-    // Settings
+
     'settings.title': 'Налаштування',
     'settings.profile': 'Профіль',
     'settings.security': 'Безпека',
@@ -88,14 +88,14 @@ const translations = {
     'settings.newPassword': 'Новий пароль',
     'settings.saveChanges': 'Зберегти зміни',
 
-    // Library
+
     'library.title': 'Моя бібліотека',
     'library.empty': 'Бібліотека порожня',
     'library.emptyDesc': 'Збережіть книги, які вас цікавлять, щоб швидко повертатися до них пізніше.',
     'library.goToCatalog': 'Перейти до каталогу',
     'library.searchPlaceholder': 'Пошук у бібліотеці...',
 
-    // Admin
+
     'admin.dashboard': 'Панель адміністратора',
     'admin.overview': 'Огляд системи та управління контентом',
     'admin.totalBooks': 'Всього книг',
@@ -110,7 +110,7 @@ const translations = {
     'admin.recentActivity': 'Остання активність',
     'admin.addBook': 'Додати книгу',
 
-    // Common
+
     'common.loading': 'Завантаження...',
     'common.error': 'Помилка',
     'common.success': 'Успішно',
@@ -127,7 +127,7 @@ const translations = {
   },
 
   en: {
-    // Navigation
+
     'nav.home': 'Home',
     'nav.books': 'Books',
     'nav.categories': 'Categories',
@@ -139,7 +139,7 @@ const translations = {
     'nav.register': 'Register',
     'nav.logout': 'Logout',
 
-    // Home page
+
     'home.hero.title': 'Discover Your Next',
     'home.hero.titleHighlight': 'Great Read',
     'home.hero.description': 'Explore thousands of books from our digital library. Search, read, and download your favorite titles anytime, anywhere.',
@@ -160,7 +160,7 @@ const translations = {
     'home.cta.description': 'Create a free account and start building your personal library today.',
     'home.cta.signup': 'Sign Up Free',
 
-    // Auth
+
     'auth.login': 'Login',
     'auth.register': 'Register',
     'auth.email': 'Email',
@@ -174,7 +174,7 @@ const translations = {
     'auth.hasAccount': 'Already have an account?',
     'auth.forgotPassword': 'Forgot password?',
 
-    // Books
+
     'books.title': 'Book Library',
     'books.search': 'Search books...',
     'books.filters': 'Filters',
@@ -190,7 +190,7 @@ const translations = {
     'books.author': 'Author',
     'books.publisher': 'Publisher',
 
-    // Profile
+
     'profile.title': 'Profile',
     'profile.stats': 'Statistics',
     'profile.savedBooks': 'Saved Books',
@@ -201,7 +201,7 @@ const translations = {
     'profile.catalog': 'Book Catalog',
     'profile.registered': 'Registered',
 
-    // Settings
+
     'settings.title': 'Settings',
     'settings.profile': 'Profile',
     'settings.security': 'Security',
@@ -211,14 +211,14 @@ const translations = {
     'settings.newPassword': 'New Password',
     'settings.saveChanges': 'Save Changes',
 
-    // Library
+
     'library.title': 'My Library',
     'library.empty': 'Library is empty',
     'library.emptyDesc': 'Save books you like to quickly access them later.',
     'library.goToCatalog': 'Go to Catalog',
     'library.searchPlaceholder': 'Search in library...',
 
-    // Admin
+
     'admin.dashboard': 'Admin Dashboard',
     'admin.overview': 'System overview and content management',
     'admin.totalBooks': 'Total Books',
@@ -233,7 +233,7 @@ const translations = {
     'admin.recentActivity': 'Recent Activity',
     'admin.addBook': 'Add Book',
 
-    // Common
+
     'common.loading': 'Loading...',
     'common.error': 'Error',
     'common.success': 'Success',
@@ -253,28 +253,28 @@ const translations = {
 const useLanguageStore = create(
   persist(
     (set, get) => ({
-      language: 'uk', // Default language
-      
-      // Get translation
+      language: 'uk', 
+
+
       t: (key) => {
         const lang = get().language;
         return translations[lang]?.[key] || translations.uk[key] || key;
       },
 
-      // Set language
+
       setLanguage: (lang) => {
         if (translations[lang]) {
           set({ language: lang });
         }
       },
 
-      // Toggle language
+
       toggleLanguage: () => {
         const current = get().language;
         set({ language: current === 'uk' ? 'en' : 'uk' });
       },
 
-      // Get available languages
+
       languages: [
         { code: 'uk', name: 'Українська', flag: '🇺🇦' },
         { code: 'en', name: 'English', flag: '🇬🇧' },
